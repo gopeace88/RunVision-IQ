@@ -1,0 +1,31 @@
+<strings>
+    <string id="AppName">RunVision-IQ</string>
+    
+    <string id="settings_glasses_name">My eyewear</string>
+
+    <string id="settings_description">Configure data screens</string>
+
+    <string id="settings_screens">Default</string>
+    <string id="settings_run">Running</string>
+    <string id="settings_bike">Cycling</string>
+    
+    <string id="settings_is_gesture_enable">Enable the gesture sensor</string>
+    
+    <string id="settings_is_auto_loop">Auto-cycle data screens</string>
+    <string id="settings_loop_timer">Adjust screen change interval (sec)</string>
+
+    <string id="settings_is_als_enable">Display auto brightness</string>
+
+    <string id="update_datafield">Update this datafield</string>
+    <string id="update_glasses">Update your glasses</string>
+    <string id="update_glasses_second_row">using ActiveLook</string>
+    <string id="update_glasses_third_row">mobile application</string>
+    
+    <string id="free_space_glasses">Not enough storage</string>
+    <string id="free_space_glasses_second_row">space available</string>
+    <string id="free_space_glasses_third_row">contact support</string>
+    
+    <string id="not_enough_battery_glasses">Insufficient glasses battery</string>
+    <string id="not_enough_battery_glasses_second_row">At least 5%</string>
+    <string id="not_enough_battery_glasses_third_row">is required.</string>
+</strings>

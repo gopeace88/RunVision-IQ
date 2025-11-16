@@ -1,0 +1,11 @@
+# RunVision-IQ - Garmin Connect IQ DataField
+# iLens AR 글래스 연동 러닝/사이클링 메트릭 디스플레이
+
+# Manifest 파일
+project.manifest = manifest.xml
+
+# 기본 리소스 경로
+base.resourcePath = resources
+
+# 소스 파일 경로
+base.sourcePath = source

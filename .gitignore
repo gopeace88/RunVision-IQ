@@ -1,0 +1,40 @@
+# Garmin Connect IQ Build Outputs
+bin/
+*.prg
+*.iq
+
+# Developer Key (NEVER commit!)
+*.der
+developer_key
+developer_key.der
+
+# SDK and Tools
+.Garmin/
+Sdks/
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build Cache
+.build/
+build/
+
+# Logs
+*.log
+
+# Temporary Files
+*.tmp
+*.bak
+*.old
+
+# ActiveLook Legacy (if any remains)
+activeLook/
