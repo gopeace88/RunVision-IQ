@@ -140,6 +140,38 @@ module ILensProtocol {
         return createMetricPacket(EXERCISE_TIME, timeSeconds);
     }
 
+    //! Create UI Layout (Sorting) packet (iLens BLE V1.0.10 Section 4.3)
+    //!
+    //! Packet Structure (21 bytes):
+    //!   [0]      Command ID = 0x00 (UI Sorting)
+    //!   [1-20]   Data: 10 pairs of (index, type)
+    //!            Each pair: index (0-9) + metric type id
+    //!            Unused positions: 0xFF (hidden/invalid)
+    //!
+    //! Example: [0x00] [0, 0x07] [1, 0x0B] [2, 0x0E] [3, 0xFF] ...
+    //!          → Position 0: Speed, Position 1: HR, Position 2: Cadence, Position 3-9: Hidden
+    //!
+    //! @param metricIds Array of metric IDs to display (max 10)
+    //! @return ByteArray 21-byte packet
+    function createUILayoutPacket(metricIds as Lang.Array<Lang.Number>) as Lang.ByteArray {
+        var packet = [0x00 as Lang.Number]b;  // Command ID: UI Sorting
+
+        // Configure 10 display positions
+        for (var i = 0; i < 10; i++) {
+            packet.add(i as Lang.Number);  // Position index (0-9)
+
+            if (i < metricIds.size()) {
+                // Valid metric: use actual metric ID
+                packet.add(metricIds[i] as Lang.Number);
+            } else {
+                // Unused position: set to 0xFF to hide from display
+                packet.add(0xFF as Lang.Number);
+            }
+        }
+
+        return packet;
+    }
+
     //! Create Current Time packet (iLens BLE V1.0.10 Section 3.3)
     //!
     //! Packet Structure (10 bytes):
