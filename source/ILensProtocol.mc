@@ -186,33 +186,43 @@ module ILensProtocol {
     //!   [9]    reason (UINT8, 0x02=External Reference, 0x03=Timezone Change)
     //!
     //! @param reason Adjust Reason code (0x02 or 0x03)
+    //! @param elapsedSeconds Optional: Exercise elapsed time in seconds (null = use current time)
     //! @return ByteArray 10-byte packet
-    function createCurrentTimePacket(reason as Lang.Number) as Lang.ByteArray {
-        // Get current time
+    function createCurrentTimePacket(reason as Lang.Number, elapsedSeconds as Lang.Number or Null) as Lang.ByteArray {
+        // Get current date (always use today's date)
         var now = Time.now();
         var info = Gregorian.info(now, Time.FORMAT_SHORT);
 
         var bytes = []b;
 
-        // Year (UINT16, little-endian)
+        // Year (UINT16, little-endian) - Always today's date
         var year = info.year;
         bytes.add((year & 0xFF) as Lang.Number);          // Low byte
         bytes.add(((year >> 8) & 0xFF) as Lang.Number);   // High byte
 
-        // Month (1-12)
+        // Month (1-12) - Always today's date
         bytes.add(info.month as Lang.Number);
 
-        // Day (1-31)
+        // Day (1-31) - Always today's date
         bytes.add(info.day as Lang.Number);
 
-        // Hour (0-23, LOCAL time)
-        bytes.add(info.hour as Lang.Number);
+        // Hour/Min/Sec: Use exercise elapsed time OR current time
+        var hour, min, sec;
+        if (elapsedSeconds != null) {
+            // ✅ Exercise elapsed time mode: Convert seconds to H:M:S
+            hour = (elapsedSeconds / 3600) % 24;  // 0-23
+            min = (elapsedSeconds % 3600) / 60;   // 0-59
+            sec = elapsedSeconds % 60;            // 0-59
+        } else {
+            // Default: Use current local time
+            hour = info.hour;
+            min = info.min;
+            sec = info.sec;
+        }
 
-        // Minute (0-59)
-        bytes.add(info.min as Lang.Number);
-
-        // Second (0-59)
-        bytes.add(info.sec as Lang.Number);
+        bytes.add(hour as Lang.Number);
+        bytes.add(min as Lang.Number);
+        bytes.add(sec as Lang.Number);
 
         // DayOfWeek (1=Mon, 2=Tue, ..., 7=Sun)
         // Gregorian.info().day_of_week: 1=Sunday, 7=Saturday

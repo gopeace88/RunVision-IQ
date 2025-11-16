@@ -304,15 +304,16 @@ class RunVisionIQView extends WatchUi.DataField {
                     addBleLog("time:ok");
                     DFLogger.logBle("TIME_CHAR_FOUND", "Current Time Characteristic discovered!");
 
-                // ✅ CRITICAL: Single-Stage Time Sync (Flutter 방식)
-                // reason=0x03 (RTC sync)만 전송
-                // reason=0x02 (UI update)는 건너뜀 (부팅 속도 향상)
+                // ✅ CRITICAL: Single-Stage Time Sync with Exercise Elapsed Time
+                // Date: TODAY (year/month/day)
+                // Time: Exercise elapsed time (hour/min/sec from _elapsedSeconds)
+                // Reason: 0x03 (RTC sync) - iLens will auto-increment from exercise start time
                 _timeSyncDone = false;
                 try {
-                    var timePacket = ILensProtocol.createCurrentTimePacket(0x03);
+                    var timePacket = ILensProtocol.createCurrentTimePacket(0x03, _elapsedSeconds);
                     _currentTimeCharacteristic.requestWrite(timePacket, {:writeType => BluetoothLowEnergy.WRITE_TYPE_WITH_RESPONSE});
-                    addBleLog("time:rtc");
-                    DFLogger.logBle("TIME_SYNC", "Sending RTC sync (reason=0x03)");
+                    addBleLog("time:ex" + _elapsedSeconds);
+                    DFLogger.logBle("TIME_SYNC", "Sending exercise time: " + _elapsedSeconds + "s (reason=0x03)");
                 } catch (ex2) {
                     addBleLog("time:fail");
                     DFLogger.logError("TIME_SYNC", "Write failed: " + ex2.getErrorMessage());
@@ -505,8 +506,8 @@ class RunVisionIQView extends WatchUi.DataField {
 
                     // 2. 모든 메트릭을 queue에 추가 (0이어도 전송 - iLens 초기화)
                     // ✅ Time Strategy:
-                    //    1) 연결 시: RTC 동기화 (Current Time Characteristic) → 절대 시간 설정
-                    //    2) iLens가 RTC 자체 업데이트 → Exercise Time 전송 불필요!
+                    //    - Current Time Characteristic (연결 시 1회): 오늘 날짜 + 운동 경과 시간
+                    //    - iLens RTC가 자동으로 증가하므로 매초 전송 불필요
                     // ✅ VELOCITY 필드: Pace를 분.초 형식으로 전송 (러너들은 Pace에 익숙)
                     //    - Garmin: Pace 5:50 → 550 전송 (분*100 + 초)
                     //    - iLens: 550 ÷ 100 = 5.50 표시
