@@ -38,3 +38,9 @@ build/
 
 # ActiveLook Legacy (if any remains)
 activeLook/
+
+# Cursor IDE Backup
+cursor_backup/
+
+# Temporary task files
+tasks_linux.json

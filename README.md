@@ -225,6 +225,24 @@ iLens AR Glasses
   - Row 4: Avg Speed, Max HR
 - **Week 3 빌드**: 106KB (코드 707줄) ✅
 
+### Week 4 (Day 9-10) - iLens Integration 완료
+- **🎯 Current Time 전송 성공**:
+  - Device Config Service Profile 등록 문제 해결
+  - ILENS_CONFIG_PROFILE 추가 등록으로 getService() 성공
+  - Current Time Characteristic 발견 및 전송 완료
+- **⏱️ Exercise Time 전송 개선**:
+  - Current Time Characteristic을 운동 경과 시간 전송에 활용
+  - 날짜: 오늘 날짜 (year/month/day)
+  - 시간: 운동 경과 시간 (hour/min/sec)
+  - iLens RTC 자동 증가 활용 (매초 전송 불필요)
+  - Exercise Time metric (0x03) 제거 (중복)
+- **🔧 디버그 UI 모드**:
+  - BLE 로그 8줄 표시 (FONT_SMALL)
+  - TX 로그 8줄 표시 (FONT_SMALL)
+  - 데이터 필드 숨김 (디버깅 용이)
+  - 진단 로깅 강화 (Profile 등록, Service 발견, Characteristic 검색)
+- **Week 4 빌드**: 135KB ✅
+
 ## 📝 기술 노트
 
 ### Monkey C Interface 이슈
@@ -258,15 +276,22 @@ iLens AR Glasses
 ### Week 3 (완료)
 - [x] UI 개선 (페이스, 평균 속도, 최대 심박수)
 - [x] 통계 추적 기능 (평균 속도, 최대 심박수)
+
+### Week 4 (완료)
+- [x] Device Config Service Profile 등록 문제 해결
+- [x] Current Time 전송 성공 (iLens RTC 동기화)
+- [x] Exercise Time을 Current Time으로 전송 (날짜: 오늘, 시간: 경과 시간)
+- [x] 디버그 UI 모드 구현 (로그 8줄 표시)
 - [ ] 실제 Garmin 기기에서 테스트 (하드웨어 필요)
 - [ ] iLens AR 글래스 연동 테스트 (하드웨어 필요)
 
-### Week 4 (계획)
+### Week 5 (계획)
+- [ ] 일반 모드 UI 개선 (간단한 연결 상태 표시)
+- [ ] 디버그 모드 / 일반 모드 전환 (settings.xml)
+- [ ] 기기별 레이아웃 최적화 (아이콘 추가)
 - [ ] 설정 화면 추가 (자동 연결, 재시도 횟수 등)
 - [ ] 배터리 최적화 (Write 빈도 조절, 스마트 전송)
-- [ ] 에러 메시지 표시 (연결 실패 이유, 상태 코드)
 - [ ] 추가 통계 (평균 케이던스, 평균 심박수)
-- [ ] UI 색상 코드 (심박수 존, 속도 범위)
 
 ## 📄 라이선스
 
@@ -280,5 +305,5 @@ iLens AR Glasses
 
 ---
 
-**Last Updated**: 2025-11-15
-**Version**: 1.3.0 (Week 3 Complete - Pace + Statistics)
+**Last Updated**: 2025-11-16
+**Version**: 1.4.0 (Week 4 Complete - iLens Integration)

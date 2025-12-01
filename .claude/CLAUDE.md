@@ -62,6 +62,27 @@ Garmin 워치에서 직접 러닝 데이터를 수집하고 iLens AR 스마트 �
 └─────────────────────────────────────────────────────┘
 ```
 
+### iLens BLE Advertisement RAW DATA (Reference)
+
+```
+RAW: 0x020102020A0009FF694C656E732D73770B09694C656E732D33323635
+
+Parsed:
+┌─────┬────────┬─────────────────────────────────────────┐
+│ LEN │  TYPE  │ VALUE                                   │
+├─────┼────────┼─────────────────────────────────────────┤
+│  2  │  0x01  │ 0x02 (Flags: General Discoverable)      │
+│  2  │  0x0A  │ 0x00 (TX Power: 0dBm)                   │
+│  9  │  0xFF  │ 0x694C656E732D7377 ("iLens-sw")         │
+│ 11  │  0x09  │ 0x694C656E732D33323635 ("iLens-3265")   │
+└─────┴────────┴─────────────────────────────────────────┘
+
+- Type 0x01: Flags
+- Type 0x0A: TX Power Level
+- Type 0xFF: Manufacturer Specific Data (필터링용: "iLens-sw")
+- Type 0x09: Complete Local Name (기기명: "iLens-XXXX")
+```
+
 ### Connect IQ App 구조
 
 ```
@@ -480,21 +501,36 @@ System.println("Debug message");
 
 ## 📝 개발 진행 상황
 
-### ✅ 완료
-- [x] 프로젝트 구조 설계
-- [x] 문서 폴더 분리 (runvision-iq/Docs/)
+### ✅ 완료 (Week 1-4)
+
+**Week 1-3**:
+- [x] Connect IQ 프로젝트 생성 및 빌드 환경 구축
+- [x] iLens BLE Protocol 구현 (ILensProtocol.mc)
+- [x] 실시간 러닝 메트릭 수집 (속도, 심박수, 케이던스, 거리, 운동 시간)
+- [x] 페이스 메트릭 추가 (분/km)
+- [x] 통계 추적 (평균 속도, 최대 심박수)
+- [x] iLens Exercise Service 연동 (메트릭 전송)
+
+**Week 4 (iLens Integration 완료)**:
+- [x] Device Config Service Profile 등록 문제 해결
+- [x] Current Time Characteristic 전송 성공
+- [x] Exercise Time을 Current Time으로 전송 (날짜: 오늘, 시간: 경과 시간)
+- [x] iLens RTC 자동 증가 활용 (매초 전송 불필요)
+- [x] 디버그 UI 모드 구현 (BLE/TX 로그 8줄 표시)
+- [x] Exercise Time metric (0x03) 제거 (중복)
 
 ### 🔄 진행 중
-- [ ] 요구사항 문서 작성 (PRD)
+- [ ] 실제 Garmin 기기에서 테스트 (하드웨어 대기)
+- [ ] iLens AR 글래스 연동 테스트 (하드웨어 대기)
 
-### 📅 예정
-- [ ] Connect IQ 프로젝트 생성 (Week 1)
-- [ ] Activity Recording 구현 (Week 2)
-- [ ] BLE Central 통합 (Week 3)
-- [ ] UI 개발 (Week 4)
-- [ ] 테스트 및 배포 (Week 5~6)
+### 📅 Week 5 계획
+- [ ] 일반 모드 UI 개선 (간단한 연결 상태 표시)
+- [ ] 디버그 모드 / 일반 모드 전환 (settings.xml)
+- [ ] 기기별 레이아웃 최적화 (선택적, 아이콘 추가)
+- [ ] 배터리 최적화 및 성능 튜닝
 
 ---
 
-**마지막 업데이트**: 2025-11-15
-**다음 액션**: PRD 작성 및 Connect IQ 프로젝트 초기화
+**마지막 업데이트**: 2025-11-16
+**현재 상태**: Week 4 완료 - iLens Integration 성공
+**다음 액션**: 실제 기기 테스트 및 UI 개선
