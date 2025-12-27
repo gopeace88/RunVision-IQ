@@ -18,6 +18,7 @@ Sdks/
 *.swp
 *.swo
 *~
+*.code-workspace
 
 # OS Files
 .DS_Store

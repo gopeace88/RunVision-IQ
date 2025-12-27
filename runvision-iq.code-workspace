@@ -10,7 +10,18 @@
     "monkeyC.developerKeyPath": "/home/jhkim/Garmin/ConnectIQ/developer_key.der",
     "monkeyC.outputPath": "${workspaceFolder}/bin",
     "monkeyC.jungleFile": "${workspaceFolder}/monkey.jungle",
-    "monkeyC.defaultDevice": "fr165"
+    "monkeyC.defaultDevice": "fr165",
+    "window.zoomLevel": 0.5,
+    "editor.fontSize": 18,
+    "terminal.integrated.fontSize": 17,
+    "debug.console.fontSize": 18,
+    "chat.editor.fontSize": 18,
+    "scm.inputFontSize": 18,
+    "markdown.preview.fontSize": 18,
+    "screencastMode.fontSize": 18,
+    "workbench.editor.enablePreview": false,
+    "workbench.editorAssociations": {
+      "*.xml": "default"
+    }
   }
 }
-
