@@ -51,6 +51,7 @@ class RunVisionIQView extends WatchUi.DataField {
 
     // ✅ Auto-reconnect 변수 (Flutter 방식)
     private var _autoReconnectEnabled as Lang.Boolean = true;
+    private var _isReconnecting as Lang.Boolean = false;  // 재연결 진행 중
     private var _reconnectAttempts as Lang.Number = 0;
     private const MAX_RECONNECT_ATTEMPTS = 3;
     private var _lastScanResult as BluetoothLowEnergy.ScanResult or Null;  // 마지막 연결 기기 정보
@@ -96,6 +97,13 @@ class RunVisionIQView extends WatchUi.DataField {
     private var _writeQueue as Lang.Array<Lang.ByteArray> = [] as Lang.Array<Lang.ByteArray>;
     private var _isWriting as Lang.Boolean = false;  // Write 진행 중 플래그
 
+    // 자동 재연결 관련 변수 (추가)
+    private var _lastReconnectTime as Lang.Number = 0;       // 마지막 재연결 시도 시간 (초)
+    private var _needsReconnect as Lang.Boolean = false;     // 재연결 필요 플래그
+    private const RECONNECT_FAST_INTERVAL = 5;               // 빠른 재연결 간격 (초)
+    private const RECONNECT_SLOW_INTERVAL = 60;              // 느린 재연결 간격 (초)
+    private const RECONNECT_FAST_MAX = 5;                    // 빠른 재연결 최대 횟수
+
     //! Constructor
     function initialize() {
         DataField.initialize();
@@ -104,6 +112,19 @@ class RunVisionIQView extends WatchUi.DataField {
         try {
             var delegate = new $.RunVisionBleDelegate(self);
             BluetoothLowEnergy.setDelegate(delegate);
+
+            // 초기화 시 기존 bonding 정보 모두 삭제 (iLens는 multi-bonding 미지원)
+            try {
+                var paired = BluetoothLowEnergy.getPairedDevices();
+                var dev = paired.next() as BluetoothLowEnergy.Device;
+                while (dev != null) {
+                    BluetoothLowEnergy.unpairDevice(dev);
+                    dev = paired.next() as BluetoothLowEnergy.Device;
+                }
+            } catch (ex2) {
+                // 무시
+            }
+
             _scanStatus = "INIT_OK";
             addBleLog("READY");
         } catch (ex) {
@@ -113,30 +134,31 @@ class RunVisionIQView extends WatchUi.DataField {
     }
 
     //! Check for already paired devices (Passive Connection)
-    //! 없으면 registerProfile() 호출 (ActiveLook 방식)
+    //! iLens는 multi-bonding 미지원 → 항상 새로 스캔/페어링
     private function checkPairedDevices() as Void {
         try {
+            // 기존 페어링 정보 삭제 (iLens가 다른 기기와 페어링되었을 수 있음)
             var pairedDevices = BluetoothLowEnergy.getPairedDevices();
             var device = pairedDevices.next() as BluetoothLowEnergy.Device;
-
-            if (device != null) {
-                // Passive Connection 존재
-                _connectedDevice = device;
-                _profileRegistered = true;
-                _isConnected = false;
-                _scanStatus = "PASSIVE";
-                addBleLog("WAIT");  // Passive 연결 대기
-            } else {
-                // Passive Connection 없음 → Profile 등록
+            while (device != null) {
                 try {
-                    BluetoothLowEnergy.registerProfile(ILENS_EXERCISE_PROFILE);
-                    BluetoothLowEnergy.registerProfile(ILENS_CONFIG_PROFILE);
-                    _scanStatus = "PROF_REG";
-                    addBleLog("SCAN");
+                    BluetoothLowEnergy.unpairDevice(device);
+                    addBleLog("UNPAIR");
                 } catch (ex) {
-                    _scanStatus = "PROF_ERR";
-                    addBleLog("ERR:prof");
+                    // 무시
                 }
+                device = pairedDevices.next() as BluetoothLowEnergy.Device;
+            }
+
+            // 항상 새로 스캔 (iLens는 multi-bonding 미지원)
+            try {
+                BluetoothLowEnergy.registerProfile(ILENS_EXERCISE_PROFILE);
+                BluetoothLowEnergy.registerProfile(ILENS_CONFIG_PROFILE);
+                _scanStatus = "PROF_REG";
+                addBleLog("SCAN");
+            } catch (ex) {
+                _scanStatus = "PROF_ERR";
+                addBleLog("ERR:prof");
             }
         } catch (ex) {
             _scanStatus = "PAIR_ERR";
@@ -242,19 +264,57 @@ class RunVisionIQView extends WatchUi.DataField {
         }
 
         // Auto-reconnect (연결 끊김 시)
-        if (!_isConnected && _lastScanResult != null &&
-            _scanStatus.find("RECONN_") != null && _reconnectAttempts <= MAX_RECONNECT_ATTEMPTS) {
-            var waitSeconds = _reconnectAttempts * 2;
-            var timeSinceDisconnect = _elapsedSeconds % 10;
-            if (timeSinceDisconnect >= waitSeconds) {
-                addBleLog("RE:" + _reconnectAttempts);
-                try {
-                    _connectedDevice = BluetoothLowEnergy.pairDevice(_lastScanResult);
-                    if (_connectedDevice != null) {
-                        _scanStatus = "RECONN_PAIR";
+        // 전략: 1-5회는 5초 간격 단순 재연결, 6회째 unpair 후 재스캔, 이후 1분마다 재스캔
+        if (_needsReconnect && !_isConnected && !_isReconnecting) {
+            var timeSinceLastTry = _elapsedSeconds - _lastReconnectTime;
+            var shouldTry = false;
+            var interval = 0;
+
+            if (_reconnectAttempts < RECONNECT_FAST_MAX) {
+                // 1-5회: 5초 간격
+                interval = RECONNECT_FAST_INTERVAL;
+                shouldTry = (timeSinceLastTry >= interval);
+            } else {
+                // 6회 이후: 1분 간격
+                interval = RECONNECT_SLOW_INTERVAL;
+                shouldTry = (timeSinceLastTry >= interval);
+            }
+
+            if (shouldTry) {
+                _reconnectAttempts++;
+                _lastReconnectTime = _elapsedSeconds;
+                _isReconnecting = true;
+
+                if (_reconnectAttempts <= RECONNECT_FAST_MAX && _lastScanResult != null) {
+                    // 1-5회: 단순 재연결 시도 (빠름)
+                    addBleLog("RE:" + _reconnectAttempts);
+                    _scanStatus = "RECONN " + _reconnectAttempts;
+                    try {
+                        _connectedDevice = BluetoothLowEnergy.pairDevice(_lastScanResult);
+                        if (_connectedDevice == null) {
+                            _isReconnecting = false;
+                        }
+                    } catch (ex) {
+                        _isReconnecting = false;
                     }
-                } catch (ex) {
-                    // DFLogger.logError("RECONNECT", "pairDevice failed: " + ex.getErrorMessage());
+                } else {
+                    // 6회 이후: unpair 후 새로 스캔
+                    addBleLog("RESCAN:" + _reconnectAttempts);
+                    _scanStatus = "RESCAN";
+                    try {
+                        // 기존 bonding 삭제
+                        var paired = BluetoothLowEnergy.getPairedDevices();
+                        var dev = paired.next() as BluetoothLowEnergy.Device;
+                        while (dev != null) {
+                            BluetoothLowEnergy.unpairDevice(dev);
+                            dev = paired.next() as BluetoothLowEnergy.Device;
+                        }
+                        // 새로 스캔 시작
+                        BluetoothLowEnergy.setScanState(BluetoothLowEnergy.SCAN_STATE_SCANNING);
+                        _isReconnecting = false;
+                    } catch (ex) {
+                        _isReconnecting = false;
+                    }
                 }
             }
         }
@@ -516,16 +576,24 @@ class RunVisionIQView extends WatchUi.DataField {
         try {
             var width = dc.getWidth();
             var height = dc.getHeight();
+
+            // DEBUG MODE: BLE 로그 표시 (상단부터)
             var centerX = width / 2;
-            var centerY = height / 2;
+            var lineHeight = 22;
+            var startY = 10;
 
-            // 로고 표시 (중앙, 176x37)
-            var logo = WatchUi.loadResource(Rez.Drawables.RunVisionLogo);
-            dc.drawBitmap(centerX - 88, centerY - 40, logo);
+            dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
+            for (var i = 0; i < 8; i++) {
+                var idx = (_bleLogIndex + i) % 8;
+                if (!_bleDebugLogs[idx].equals("")) {
+                    dc.drawText(centerX, startY + (i * lineHeight), Graphics.FONT_SMALL, _bleDebugLogs[idx], Graphics.TEXT_JUSTIFY_CENTER);
+                }
+            }
 
-            // 상태 텍스트 (로고 아래)
-            var statusText = _isConnected ? "Connected" : _scanStatus;
-            dc.drawText(centerX, centerY + 10, Graphics.FONT_SMALL, statusText, Graphics.TEXT_JUSTIFY_CENTER);
+            // 상태 텍스트 (중앙 하단)
+            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
+            var statusText = _isConnected ? "CONNECTED" : _scanStatus;
+            dc.drawText(centerX, height - 50, Graphics.FONT_SMALL, statusText, Graphics.TEXT_JUSTIFY_CENTER);
 
         } catch (ex) {
             dc.drawText(dc.getWidth() / 2, 50, Graphics.FONT_SMALL, "ERROR", Graphics.TEXT_JUSTIFY_CENTER);
@@ -590,6 +658,8 @@ class RunVisionIQView extends WatchUi.DataField {
             _connectionStartTime = _elapsedSeconds;
             _timeCharRetryCount = 0;
             _reconnectAttempts = 0;
+            _needsReconnect = false;
+            _isReconnecting = false;
             _scanStatus = "CONNECTED";
             addBleLog("CONN OK");
             // DFLogger.logBle("CONNECTED", "Device connected");
@@ -604,16 +674,13 @@ class RunVisionIQView extends WatchUi.DataField {
             _timeCharRetryCount = 0;
             _scanStatus = "DISCONN";
             addBleLog("DISCONN");
-            // DFLogger.logBle("DISCONNECTED", "Connection lost");
 
-            // Auto-reconnect
-            if (_autoReconnectEnabled && _lastScanResult != null && _reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-                _reconnectAttempts++;
-                _scanStatus = "RECONN_" + _reconnectAttempts;
-                // DFLogger.logBle("RECONNECT", "Attempt " + _reconnectAttempts);
-            } else if (_reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-                _scanStatus = "RECONN_FAIL";
-                // DFLogger.logBle("RECONNECT", "Max attempts reached");
+            // Auto-reconnect 시작
+            if (_autoReconnectEnabled) {
+                _needsReconnect = true;
+                _lastReconnectTime = _elapsedSeconds;
+                _isReconnecting = false;
+                addBleLog("RECONN..");
             }
         }
 
@@ -813,7 +880,7 @@ class RunVisionBleDelegate extends BluetoothLowEnergy.BleDelegate {
     }
 
     function onConnectedStateChanged(device as BluetoothLowEnergy.Device, state as BluetoothLowEnergy.ConnectionState) as Void {
-        // System.println("onConnectedStateChanged: state=" + state);
+        _view.addBleLog("ST:" + state);
         _view.onConnectedStateChanged(device, state);
     }
 
