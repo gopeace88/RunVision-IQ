@@ -9,9 +9,14 @@ RunVision-IQ는 Garmin 시계의 러닝 메트릭을 iLens AR 스마트 글래�
 - **플랫폼**: Garmin Connect IQ
 - **SDK 버전**: 8.3.0
 - **언어**: Monkey C
-- **타겟 디바이스**:
-  - Forerunner 265/265S/955/965
-  - Fenix 7 시리즈 (7/7S/7X/7Pro/7SPro/7XPro)
+- **호환 디바이스** (28개, Garmin 검증 완료):
+  - **Forerunner**: 265/265S, 570 (42mm/47mm), 955, 965, 970
+  - **Fenix 7**: 7/7S/7X, 7 Pro/7S Pro/7X Pro
+  - **Fenix 8**: 8 AMOLED (43mm/47mm/51mm), 8 Solar (47mm/51mm)
+  - **Epix Pro**: 42mm/47mm/51mm
+  - **Enduro**: 2, 3
+  - **tactix**: 7, 7 AMOLED, 8 (47mm AMOLED/51mm Solar)
+  - **D2**: Mach 1 Pro
 
 ## 🎯 주요 기능
 
@@ -295,15 +300,16 @@ iLens AR Glasses
 
 ## 📄 라이선스
 
-이 프로젝트는 RTK (www.rtk.ai)의 내부 프로젝트입니다.
+이 프로젝트는 RunVisionLabs (www.runvision.ai)의 프로젝트입니다.
 
 ## 👥 Contact
 
-- **Company**: RTK
-- **Website**: www.rtk.ai
-- **Email**: info@rtk.ai
+- **Company**: RunVisionLabs
+- **Website**: www.runvision.ai
+- **Email**: support@runvision.ai
+- **Address**: 경기도 용인시 기흥구 동백중앙로 191, J831
 
 ---
 
-**Last Updated**: 2025-11-16
-**Version**: 1.4.0 (Week 4 Complete - iLens Integration)
+**Last Updated**: 2026-01-06
+**Version**: 1.0.0 (Connect IQ Store Release)

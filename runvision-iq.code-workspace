@@ -6,7 +6,7 @@
     }
   ],
   "settings": {
-    "monkeyC.sdkPath": "/home/jhkim/.Garmin/ConnectIQ/Sdks/connectiq-sdk-lin-8.3.0-2025-09-22-5813687a0",
+    "monkeyC.sdkPath": "/mnt/c/Users/jinhee/AppData/Roaming/Garmin/ConnectIQ/Sdks/connectiq-sdk-win-8.4.0-2025-12-03-5122605dc",
     "monkeyC.developerKeyPath": "/home/jhkim/Garmin/ConnectIQ/developer_key.der",
     "monkeyC.outputPath": "${workspaceFolder}/bin",
     "monkeyC.jungleFile": "${workspaceFolder}/monkey.jungle",

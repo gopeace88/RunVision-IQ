@@ -576,24 +576,16 @@ class RunVisionIQView extends WatchUi.DataField {
         try {
             var width = dc.getWidth();
             var height = dc.getHeight();
-
-            // DEBUG MODE: BLE 로그 표시 (상단부터)
             var centerX = width / 2;
-            var lineHeight = 22;
-            var startY = 10;
+            var centerY = height / 2;
 
-            dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
-            for (var i = 0; i < 8; i++) {
-                var idx = (_bleLogIndex + i) % 8;
-                if (!_bleDebugLogs[idx].equals("")) {
-                    dc.drawText(centerX, startY + (i * lineHeight), Graphics.FONT_SMALL, _bleDebugLogs[idx], Graphics.TEXT_JUSTIFY_CENTER);
-                }
-            }
+            // 로고 표시 (중앙, 176x37)
+            var logo = WatchUi.loadResource(Rez.Drawables.RunVisionLogo);
+            dc.drawBitmap(centerX - 88, centerY - 40, logo);
 
-            // 상태 텍스트 (중앙 하단)
-            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-            var statusText = _isConnected ? "CONNECTED" : _scanStatus;
-            dc.drawText(centerX, height - 50, Graphics.FONT_SMALL, statusText, Graphics.TEXT_JUSTIFY_CENTER);
+            // 상태 텍스트 (로고 아래)
+            var statusText = _isConnected ? "Connected" : _scanStatus;
+            dc.drawText(centerX, centerY + 10, Graphics.FONT_SMALL, statusText, Graphics.TEXT_JUSTIFY_CENTER);
 
         } catch (ex) {
             dc.drawText(dc.getWidth() / 2, 50, Graphics.FONT_SMALL, "ERROR", Graphics.TEXT_JUSTIFY_CENTER);

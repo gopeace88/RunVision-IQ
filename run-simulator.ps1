@@ -1,7 +1,7 @@
 # RunVision-IQ Simulator 실행 스크립트
 # PowerShell에서 실행: .\run-simulator.ps1
 
-$SDK_BIN = "$env:APPDATA\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.3.0-2025-09-22-5813687a0\bin"
+$SDK_BIN = "$env:APPDATA\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.4.0-2025-12-03-5122605dc\bin"
 $PRG_FILE = "D:\00.Projects\00.RunVision-IQ\bin\RunVisionIQ.prg"
 $DEVICE = "fr265"
 

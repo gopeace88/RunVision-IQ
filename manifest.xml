@@ -4,12 +4,12 @@
 <iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="3">
     <iq:application
         entry="RunVisionIQApp"
-        id="a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d"
+        id="97b7f3ea-d9fd-40a5-9842-566cb16b4112"
         launcherIcon="@Drawables.LauncherIcon"
         minApiLevel="3.1.0"
         name="@Strings.AppName"
         type="datafield"
-        version="1.0.1">
+        version="1.0.0">
 
         <iq:products>
             <!-- Primary Target: Forerunner 265 -->
@@ -27,6 +27,36 @@
             <iq:product id="fenix7pro"/>
             <iq:product id="fenix7spro"/>
             <iq:product id="fenix7xpro"/>
+
+            <!-- Phase 3: 2024-2025 신규 기기 (BLE Central 지원) -->
+            <!-- Forerunner 570/970 -->
+            <iq:product id="fr57042mm"/>
+            <iq:product id="fr57047mm"/>
+            <iq:product id="fr970"/>
+
+            <!-- Fenix 8 Series -->
+            <iq:product id="fenix843mm"/>
+            <iq:product id="fenix847mm"/>
+            <iq:product id="fenix8solar47mm"/>
+            <iq:product id="fenix8solar51mm"/>
+
+            <!-- Epix Pro 2 Series -->
+            <iq:product id="epix2pro42mm"/>
+            <iq:product id="epix2pro47mm"/>
+            <iq:product id="epix2pro51mm"/>
+
+            <!-- Enduro Series -->
+            <iq:product id="enduro2"/>
+            <iq:product id="enduro3"/>
+
+            <!-- tactix Series -->
+            <iq:product id="tactix7"/>
+            <iq:product id="tactix7amoled"/>
+            <iq:product id="tactix847mm"/>
+            <iq:product id="tactix851mm"/>
+
+            <!-- D2 Series -->
+            <iq:product id="d2mach1pro"/>
         </iq:products>
 
         <iq:permissions>
