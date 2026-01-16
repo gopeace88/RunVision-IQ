@@ -41,13 +41,10 @@ class RunVisionIQView extends WatchUi.DataField {
     // BLE Scanner 방식: 직접 관리
     private var _connectedDevice as BluetoothLowEnergy.Device or Null;
     private var _exerciseCharacteristic as BluetoothLowEnergy.Characteristic or Null;
-    private var _currentTimeCharacteristic as BluetoothLowEnergy.Characteristic or Null;
+    private var _currentTimeCharacteristic as BluetoothLowEnergy.Characteristic or Null;  // For elapsed time
     private var _isConnected as Lang.Boolean = false;
     private var _scanStatus as Lang.String = "INIT";
     private var _devicesFound as Lang.Number = 0;
-    private var _timeSyncDone as Lang.Boolean = false;  // Current Time 동기화 완료 플래그
-    private var _uiLayoutSent as Lang.Boolean = false;  // UI Layout 설정 전송 완료 플래그
-    private var _timeCharRetryCount as Lang.Number = 0;  // Current Time Char 검색 재시도 횟수
 
     // ✅ Auto-reconnect 변수 (Flutter 방식)
     private var _autoReconnectEnabled as Lang.Boolean = true;
@@ -55,6 +52,7 @@ class RunVisionIQView extends WatchUi.DataField {
     private var _reconnectAttempts as Lang.Number = 0;
     private const MAX_RECONNECT_ATTEMPTS = 3;
     private var _lastScanResult as BluetoothLowEnergy.ScanResult or Null;  // 마지막 연결 기기 정보
+    private var _charRetryCount as Lang.Number = 0;  // Characteristic 검색 재시도 카운터
 
     // Debug logs - BLE와 TX 분리 (각 4줄)
     // ✅ DEBUG MODE: 로그 배열 크기 8로 증가 (4→8)
@@ -82,7 +80,7 @@ class RunVisionIQView extends WatchUi.DataField {
     private var _profileRegistered as Lang.Boolean = false;
 
     // ✅ 자체 경과 시간 카운터 (Flutter 방식)
-    // DataField의 :timerTime이 제공되지 않으므로 자체 구현
+    // Activity.Info.timerTime 사용 (ms), 미지원 기기는 fallback 카운터 사용
     private var _elapsedSeconds as Lang.Number = 0;
     private var _connectionStartTime as Lang.Number = 0;  // 연결 시작 시간 (Service Discovery 대기용)
 
@@ -319,81 +317,43 @@ class RunVisionIQView extends WatchUi.DataField {
             }
         }
 
-        // ✅ Lazy Loading: Characteristic 필요할 때 획득 (ActiveLook 방식)
+        // ✅ Lazy Loading: Characteristic 필요할 때 획득 (매초 1회 시도)
         if (_isConnected && _connectedDevice != null && _exerciseCharacteristic == null) {
             try {
                 _exerciseCharacteristic = tryGetServiceCharacteristic(
                     ILensProtocol.EXERCISE_SERVICE_UUID,
                     ILensProtocol.EXERCISE_DATA_UUID,
-                    5  // ← 5번 재시도
+                    3  // 3번 동기 재시도
                 );
+                _charRetryCount = 0;  // 성공 시 리셋
                 addBleLog("CHAR OK");
                 _scanStatus = "READY";
-                // DFLogger.logBle("CHAR_FOUND", "Exercise Data Characteristic discovered");
-            } catch (ex) {
-                // 다음 compute에서 재시도 (로그 없음)
-            }
-        }
 
-        // ✅ Current Time Characteristic 획득 (Device Config Service에 있음!)
-        var timeSinceConnection = _elapsedSeconds - _connectionStartTime;
-        if (_isConnected && _connectedDevice != null && _exerciseCharacteristic != null &&
-            _currentTimeCharacteristic == null && timeSinceConnection >= 2 && _timeCharRetryCount < 5) {
-
-            _timeCharRetryCount++;
-            // DFLogger.logBle("TIME_CHAR_SEARCH", "Attempt " + _timeCharRetryCount + "/5");
-
-            var deviceConfigService = _connectedDevice.getService(ILensProtocol.DEVICE_CONFIG_SERVICE_UUID);
-            if (deviceConfigService == null) {
-                // Service 아직 미발견 → 다음 compute()에서 재시도
-            } else {
-
+                // Also try to get Current Time characteristic (for elapsed time)
                 try {
                     _currentTimeCharacteristic = tryGetServiceCharacteristic(
                         ILensProtocol.DEVICE_CONFIG_SERVICE_UUID,
                         ILensProtocol.CURRENT_TIME_UUID,
-                        5  // ← 5번 재시도
+                        2  // 2번 재시도
                     );
                     addBleLog("TIME OK");
-                    // DFLogger.logBle("TIME_CHAR_FOUND", "Current Time Characteristic discovered!");
-
-                // ✅ CRITICAL: Single-Stage Time Sync with Exercise Elapsed Time
-                // Date: TODAY (year/month/day)
-                // Time: Exercise elapsed time (hour/min/sec from _elapsedSeconds)
-                // Reason: 0x03 (RTC sync) - iLens will auto-increment from exercise start time
-                _timeSyncDone = false;
-                try {
-                    var timePacket = ILensProtocol.createCurrentTimePacket(0x03, _elapsedSeconds);
-                    _currentTimeCharacteristic.requestWrite(timePacket, {:writeType => BluetoothLowEnergy.WRITE_TYPE_WITH_RESPONSE});
-                    // DFLogger.logBle("TIME_SYNC", "Sending exercise time: " + _elapsedSeconds + "s");
                 } catch (ex2) {
-                    // DFLogger.logError("TIME_SYNC", "Write failed");
+                    // Current Time is optional - continue without it
+                    addBleLog("TIME FAIL");
                 }
-
-                // ✅ UI Layout 전송 (iLens BLE V1.0.10 Section 4.3)
-                // 어떤 메트릭을 어디에 표시할지 설정
-                // Position 0-4: 실제 메트릭, Position 5-9: 숨김 (0xFF)
-                if (!_uiLayoutSent) {
-                    try {
-                        var metricIds = [
-                            ILensProtocol.VELOCITY,
-                            ILensProtocol.HEART_RATE,
-                            ILensProtocol.CADENCE,
-                            ILensProtocol.POWER,
-                            ILensProtocol.DISTANCE
-                        ] as Lang.Array<Lang.Number>;
-
-                        var uiLayoutPacket = ILensProtocol.createUILayoutPacket(metricIds);
-                        _exerciseCharacteristic.requestWrite(uiLayoutPacket, {:writeType => BluetoothLowEnergy.WRITE_TYPE_WITH_RESPONSE});
-                        _uiLayoutSent = true;
-                        addBleLog("UI OK");
-                        // DFLogger.logBle("UI_LAYOUT", "Sending UI Layout");
-                    } catch (ex3) {
-                        // DFLogger.logError("UI_LAYOUT", "Write failed");
-                    }
-                }
-                } catch (ex) {
-                    // DFLogger.logError("TIME_CHAR_SEARCH", "Failed");
+            } catch (ex) {
+                _charRetryCount++;
+                if (_charRetryCount >= 5) {
+                    // 5회 실패 → 재연결 트리거
+                    _charRetryCount = 0;
+                    _isConnected = false;
+                    _connectedDevice = null;
+                    _scanStatus = "RECONN...";
+                    addBleLog("RECONN");
+                    // → auto-reconnect 로직이 다음 compute에서 동작
+                } else {
+                    // 실패 횟수 표시 (1~4) - 사용자가 이상 상태 인지 가능
+                    _scanStatus = "CHAR_FAIL(" + _charRetryCount + ")";
                 }
             }
         }
@@ -527,9 +487,14 @@ class RunVisionIQView extends WatchUi.DataField {
             if (power > 999) { power = 999; }
         }
 
-        // ✅ 자체 경과 시간 카운터 (Flutter 방식)
-        // DataField의 compute()는 1초마다 호출됨 → 매 호출마다 +1
-        _elapsedSeconds += 1;
+        // ✅ Activity.Info에서 실제 경과 시간 사용 (timerTime = milliseconds)
+        // compute()는 1초마다 호출되지 않을 수 있으므로 timerTime 사용이 정확함
+        if (info != null && info has :timerTime && info.timerTime != null) {
+            _elapsedSeconds = (info.timerTime / 1000).toNumber();  // ms → seconds
+        } else {
+            // Fallback: 수동 카운터 (timerTime 미지원 기기)
+            _elapsedSeconds += 1;
+        }
         var minutes = _elapsedSeconds / 60;
         var secs = _elapsedSeconds % 60;
         _timeLabel = minutes.format("%d") + ":" + secs.format("%02d");
@@ -543,17 +508,17 @@ class RunVisionIQView extends WatchUi.DataField {
                 if (!_isWriting) {
                     _writeQueue = [] as Lang.Array<Lang.ByteArray>;
 
-                    // Queue에 메트릭 추가 (VELOCITY=페이스초, iLens가 /60해서 표시)
-                    _writeQueue.add(ILensProtocol.createVelocityPacket(paceSeconds));
-                    _writeQueue.add(ILensProtocol.createHeartRatePacket(hr));
-                    _writeQueue.add(ILensProtocol.createCadencePacket(cadence));
-                    _writeQueue.add(ILensProtocol.createPowerPacket(power));
-                    _writeQueue.add(ILensProtocol.createDistancePacket(distance != null ? distance : 0));
+                    // Queue에 5개 메트릭 추가 (v1.0.2: Sport Time 사용, Power/Current Time 제거)
+                    _writeQueue.add(ILensProtocol.createExerciseTimePacket(_elapsedSeconds));  // ⭐ Sport Time (0x03)
+                    _writeQueue.add(ILensProtocol.createVelocityPacket(paceSeconds));          // Pace
+                    _writeQueue.add(ILensProtocol.createHeartRatePacket(hr));                  // Heart Rate
+                    _writeQueue.add(ILensProtocol.createCadencePacket(cadence));              // Cadence
+                    _writeQueue.add(ILensProtocol.createDistancePacket(distance != null ? distance : 0));  // Distance
 
                     // DFLogger.log("[TX] pace=" + paceSeconds + " hr=" + hr + " cad=" + cadence + " pwr=" + power);
 
                     // 화면에 핵심 메트릭만 표시
-                    addTxLog("P:" + _paceLabel + " H:" + hr);
+                    addTxLog("P:" + _paceLabel + " T:" + _timeLabel);
 
                     processWriteQueue();
                 }
@@ -614,14 +579,6 @@ class RunVisionIQView extends WatchUi.DataField {
             addTxLog("ERR:wr");
             _scanStatus = "WRITE_ERR";
             _writeQueue = [] as Lang.Array<Lang.ByteArray>;
-            // DFLogger.logError("WRITE", "Write failed, status=" + status);
-            return;
-        }
-
-        // Time Sync 완료 확인
-        if (characteristic == _currentTimeCharacteristic && !_timeSyncDone) {
-            _timeSyncDone = true;
-            // DFLogger.logBle("TIME_SYNC_DONE", "RTC sync completed");
             return;
         }
 
@@ -648,8 +605,8 @@ class RunVisionIQView extends WatchUi.DataField {
             _isConnected = true;
             _connectedDevice = device;
             _connectionStartTime = _elapsedSeconds;
-            _timeCharRetryCount = 0;
             _reconnectAttempts = 0;
+            _charRetryCount = 0;  // Characteristic 검색 카운터 리셋
             _needsReconnect = false;
             _isReconnecting = false;
             _scanStatus = "CONNECTED";
@@ -660,10 +617,8 @@ class RunVisionIQView extends WatchUi.DataField {
             _connectedDevice = null;
             _exerciseCharacteristic = null;
             _currentTimeCharacteristic = null;
-            _timeSyncDone = false;
-            _uiLayoutSent = false;
+            _charRetryCount = 0;  // 재시도 카운터 리셋
             _connectionStartTime = 0;
-            _timeCharRetryCount = 0;
             _scanStatus = "DISCONN";
             addBleLog("DISCONN");
 
@@ -856,8 +811,8 @@ class RunVisionBleDelegate extends BluetoothLowEnergy.BleDelegate {
                     }
                 }
 
-                // "ilens" 포함 시 iLens로 인식 (case-insensitive)
-                if (rawStr.toLower().find("ilens") != null) {
+                // "ilens" 또는 "rlens" 포함 시 인식 (case-insensitive, 하위호환)
+                if (rawStr.toLower().find("ilens") != null || rawStr.toLower().find("rlens") != null) {
                     _view.onScanResult(r);
                 }
             }

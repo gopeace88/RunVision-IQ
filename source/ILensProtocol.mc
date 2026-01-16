@@ -22,6 +22,8 @@ module ILensProtocol {
     // Characteristic UUIDs
     const EXERCISE_DATA_UUID = BluetoothLowEnergy.stringToUuid("c259c1bd-18d3-c348-b88d-5447aea1b615");
     const CURRENT_TIME_UUID = BluetoothLowEnergy.stringToUuid("54ac7f82-eb87-aa4e-0154-a71d80471e6e");
+    const UNIVERSAL_SUBSCRIPTIONS_UUID = BluetoothLowEnergy.stringToUuid("c1329ce5-b463-31a5-8b78-bd220c1480cd");  // ⚠️ CRITICAL: 초기화 필수!
+    const BATTERY_LEVEL_UUID = BluetoothLowEnergy.stringToUuid("33bd4a32-f763-0391-2820-55610f999aef");  // Keep-Alive용
 
     // Metric IDs
     enum MetricID {
@@ -241,4 +243,26 @@ module ILensProtocol {
         return bytes;
     }
 
+    // ========== Universal Subscriptions Initialization (⚠️ CRITICAL) ==========
+    // rLens BLE 프로토콜 V1.0.1에 따른 필수 초기화 단계
+    // 연결 후 반드시 이 초기화를 먼저 수행해야 함
+    // 참조: iLens-BLE-Connection-Best-Practices.md
+
+    //! Universal Subscriptions 초기화 명령 1: 버전/언어 읽기
+    //! @return ByteArray [0x10, 0x01]
+    function createUniversalSubCommand1() as Lang.ByteArray {
+        return [0x10, 0x01]b;
+    }
+
+    //! Universal Subscriptions 초기화 명령 2: BT 주소 읽기
+    //! @return ByteArray [0x10, 0x04]
+    function createUniversalSubCommand2() as Lang.ByteArray {
+        return [0x10, 0x04]b;
+    }
+
+    //! Universal Subscriptions 초기화 명령 3: 번역 설정 읽기
+    //! @return ByteArray [0x10, 0x03]
+    function createUniversalSubCommand3() as Lang.ByteArray {
+        return [0x10, 0x03]b;
+    }
 }
