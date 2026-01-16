@@ -7,8 +7,9 @@ RunVision-IQ는 Garmin 시계의 러닝 메트릭을 iLens AR 스마트 글래�
 ## 📋 프로젝트 개요
 
 - **플랫폼**: Garmin Connect IQ
-- **SDK 버전**: 8.3.0
+- **SDK 버전**: 8.4.0
 - **언어**: Monkey C
+- **API Level**: 3.1.0+ (BLE Central 필수)
 - **호환 디바이스** (28개, Garmin 검증 완료):
   - **Forerunner**: 265/265S, 570 (42mm/47mm), 955, 965, 970
   - **Fenix 7**: 7/7S/7X, 7 Pro/7S Pro/7X Pro
@@ -17,6 +18,12 @@ RunVision-IQ는 Garmin 시계의 러닝 메트릭을 iLens AR 스마트 글래�
   - **Enduro**: 2, 3
   - **tactix**: 7, 7 AMOLED, 8 (47mm AMOLED/51mm Solar)
   - **D2**: Mach 1 Pro
+
+> **Compatible Devices**
+> Garmin devices supporting Connect IQ `Toybox.BluetoothLowEnergy` (BLE Central role).
+> Actual compatibility depends on firmware and system limitations.
+>
+> 상세 정보: [BLE-Central-Device-Compatibility.md](../Docs/runvision-iq/BLE-Central-Device-Compatibility.md)
 
 ## 🎯 주요 기능
 
@@ -71,12 +78,12 @@ runvision-iq/
 # SDK 다운로드 및 설치
 mkdir -p ~/.Garmin/ConnectIQ/Sdks
 cd ~/.Garmin/ConnectIQ/Sdks
-# SDK 8.3.0 설치
+# SDK 8.4.0 설치
 ```
 
 2. **환경 변수 설정** (`~/.garmin_env.sh`):
 ```bash
-export GARMIN_SDK_HOME=~/.Garmin/ConnectIQ/Sdks/connectiq-sdk-lin-8.3.0-2025-09-22-5813687a0
+export GARMIN_SDK_HOME=~/.Garmin/ConnectIQ/Sdks/connectiq-sdk-lin-8.4.0-2025-12-03-5122605dc
 export PATH=$GARMIN_SDK_HOME/bin:$PATH
 export GARMIN_DEV_KEY=~/Garmin/ConnectIQ/developer_key
 
@@ -297,6 +304,46 @@ iLens AR Glasses
 - [ ] 설정 화면 추가 (자동 연결, 재시도 횟수 등)
 - [ ] 배터리 최적화 (Write 빈도 조절, 스마트 전송)
 - [ ] 추가 통계 (평균 케이던스, 평균 심박수)
+
+## 📝 Connect IQ Store 등록 정보
+
+### App Description (English)
+```
+RunVision-IQ displays real-time running metrics on iLens/rLens AR smart glasses.
+
+Features:
+• Real-time speed, heart rate, cadence display
+• Distance and elapsed time tracking
+• Pace calculation (min/km)
+• Average speed and max heart rate statistics
+• Auto-connect to iLens/rLens glasses
+
+Requirements:
+• iLens or rLens AR Smart Glasses
+
+Compatible Devices:
+Garmin devices supporting Connect IQ Toybox.BluetoothLowEnergy (BLE Central role).
+Actual compatibility depends on firmware and system limitations.
+```
+
+### App Description (한국어)
+```
+RunVision-IQ는 iLens/rLens AR 스마트 글래스에 실시간 러닝 데이터를 표시합니다.
+
+기능:
+• 실시간 속도, 심박수, 케이던스 표시
+• 거리 및 운동 시간 추적
+• 페이스 계산 (분/km)
+• 평균 속도 및 최대 심박수 통계
+• iLens/rLens 글래스 자동 연결
+
+요구사항:
+• iLens 또는 rLens AR 스마트 글래스
+
+호환 기기:
+Connect IQ Toybox.BluetoothLowEnergy (BLE Central)를 지원하는 Garmin 기기.
+실제 호환성은 펌웨어 및 시스템 제한에 따라 다를 수 있습니다.
+```
 
 ## 📄 라이선스
 

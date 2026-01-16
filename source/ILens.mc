@@ -331,20 +331,20 @@ module ILensBLE {
 
                 _log("onScanResults", ["Parsed device name", deviceName]);
 
-                // iLens filtering: Device name format is "iLens-XXXX" or "iLens-sw"
-                var isILens = false;
+                // rLens filtering: Device name format is "iLens-XXXX", "rLens-XXXX", etc. (하위호환)
+                var isRLens = false;
                 if (deviceName.length() > 0) {
                     var nameLower = deviceName.toLower();
-                    if (nameLower.find("ilens") != null) {
-                        isILens = true;
+                    if (nameLower.find("ilens") != null || nameLower.find("rlens") != null) {
+                        isRLens = true;
                     }
                 }
 
-                if (isILens) {
-                    _log("onScanResults", ["iLens device found!", deviceName]);
+                if (isRLens) {
+                    _log("onScanResults", ["rLens device found!", deviceName]);
                     _delegate.onScanResult(device);
                 } else {
-                    _log("onScanResults", ["Not iLens, skipped", deviceName]);
+                    _log("onScanResults", ["Not rLens, skipped", deviceName]);
                 }
             }
         }

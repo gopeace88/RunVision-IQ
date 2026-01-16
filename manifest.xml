@@ -9,18 +9,54 @@
         minApiLevel="3.1.0"
         name="@Strings.AppName"
         type="datafield"
-        version="1.0.0">
+        version="1.1.0">
 
         <iq:products>
-            <!-- Primary Target: Forerunner 265 -->
+            <!-- ========================================== -->
+            <!-- 합집합: Toybox.BluetoothLowEnergy 문서      -->
+            <!--       + 실제 테스트 (FR165)                -->
+            <!--       + Marketplace 검증 (28개)            -->
+            <!-- ========================================== -->
+
+            <!-- Forerunner 165 Series (실제 테스트 완료!) -->
+            <iq:product id="fr165"/>
+            <iq:product id="fr165m"/>
+
+            <!-- Forerunner 255 Series -->
+            <iq:product id="fr255"/>
+            <iq:product id="fr255m"/>
+            <iq:product id="fr255s"/>
+            <iq:product id="fr255sm"/>
+
+            <!-- Forerunner 265 Series (Primary Target) -->
             <iq:product id="fr265"/>
             <iq:product id="fr265s"/>
 
-            <!-- Phase 1: Forerunner Series (BLE Central 지원) -->
-            <iq:product id="fr955"/>
-            <iq:product id="fr965"/>
+            <!-- Forerunner 500 Series -->
+            <iq:product id="fr57042mm"/>
+            <iq:product id="fr57047mm"/>
 
-            <!-- Phase 2: Fenix 7 Series (BLE Central 지원) -->
+            <!-- Forerunner 900 Series -->
+            <iq:product id="fr945"/>
+            <iq:product id="fr945lte"/>
+            <iq:product id="fr955"/>
+            <!-- fr955solar: SDK 미지원 -->
+            <iq:product id="fr965"/>
+            <iq:product id="fr970"/>
+
+            <!-- Forerunner 기타 -->
+            <iq:product id="fr245"/>
+            <iq:product id="fr245m"/>
+            <iq:product id="fr745"/>
+
+            <!-- Fenix 6 Series -->
+            <iq:product id="fenix6"/>
+            <iq:product id="fenix6s"/>
+            <iq:product id="fenix6pro"/>
+            <iq:product id="fenix6spro"/>
+            <iq:product id="fenix6xpro"/>
+
+            <!-- Fenix 7 Series -->
             <iq:product id="fenix7"/>
             <iq:product id="fenix7s"/>
             <iq:product id="fenix7x"/>
@@ -28,35 +64,34 @@
             <iq:product id="fenix7spro"/>
             <iq:product id="fenix7xpro"/>
 
-            <!-- Phase 3: 2024-2025 신규 기기 (BLE Central 지원) -->
-            <!-- Forerunner 570/970 -->
-            <iq:product id="fr57042mm"/>
-            <iq:product id="fr57047mm"/>
-            <iq:product id="fr970"/>
-
             <!-- Fenix 8 Series -->
             <iq:product id="fenix843mm"/>
             <iq:product id="fenix847mm"/>
+            <!-- fenix851mm: SDK 미지원 -->
             <iq:product id="fenix8solar47mm"/>
             <iq:product id="fenix8solar51mm"/>
 
-            <!-- Epix Pro 2 Series -->
+            <!-- Epix Series -->
+            <iq:product id="epix2"/>
             <iq:product id="epix2pro42mm"/>
             <iq:product id="epix2pro47mm"/>
             <iq:product id="epix2pro51mm"/>
 
             <!-- Enduro Series -->
-            <iq:product id="enduro2"/>
+            <iq:product id="enduro"/>
+            <!-- enduro2: SDK 미지원 -->
             <iq:product id="enduro3"/>
 
-            <!-- tactix Series -->
-            <iq:product id="tactix7"/>
-            <iq:product id="tactix7amoled"/>
-            <iq:product id="tactix847mm"/>
-            <iq:product id="tactix851mm"/>
+            <!-- tactix Series - SDK 8.4.0에서 지원하는 ID만 -->
+            <!-- tactix7, tactix7amoled, tactix847mm, tactix851mm: SDK 미지원 -->
+
+            <!-- MARQ Series -->
+            <iq:product id="marq2"/>
+            <iq:product id="marq2aviator"/>
 
             <!-- D2 Series -->
-            <iq:product id="d2mach1pro"/>
+            <iq:product id="d2mach1"/>
+            <!-- d2mach1pro: SDK 미지원 -->
         </iq:products>
 
         <iq:permissions>

@@ -45,3 +45,7 @@ cursor_backup/
 
 # Temporary task files
 tasks_linux.json
+
+# Temporary/generated files
+Java/
+*.png
