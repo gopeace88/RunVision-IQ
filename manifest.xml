@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <!-- RunVision-IQ - Garmin Connect IQ DataField -->
-<!-- iLens AR 글래스 연동 러닝/사이클링 메트릭 디스플레이 -->
+<!-- iLens/rLens AR 글래스 연동 러닝/사이클링 메트릭 디스플레이 -->
+<!-- BLE Central 지원 기기 전체 목록 (2026-01-20 업데이트) -->
 <iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="3">
     <iq:application
         entry="RunVisionIQApp"
@@ -12,15 +13,26 @@
         version="1.1.0">
 
         <iq:products>
-            <!-- ========================================== -->
-            <!-- 합집합: Toybox.BluetoothLowEnergy 문서      -->
-            <!--       + 실제 테스트 (FR165)                -->
-            <!--       + Marketplace 검증 (28개)            -->
-            <!-- ========================================== -->
+            <!-- ========================================================= -->
+            <!-- BLE Central (Toybox.BluetoothLowEnergy) 지원 기기 전체     -->
+            <!-- 참조: https://developer.garmin.com/connect-iq/api-docs/   -->
+            <!--       Toybox/BluetoothLowEnergy.html                      -->
+            <!-- 업데이트: 2026-01-20                                       -->
+            <!-- ========================================================= -->
 
-            <!-- Forerunner 165 Series (실제 테스트 완료!) -->
+            <!-- ==================== Forerunner Series ==================== -->
+            <!-- 러닝 워치 - PRIMARY TARGET -->
+
+            <!-- Forerunner 55 (Entry Level) -->
+            <iq:product id="fr55"/>
+
+            <!-- Forerunner 165 Series -->
             <iq:product id="fr165"/>
             <iq:product id="fr165m"/>
+
+            <!-- Forerunner 245 Series -->
+            <iq:product id="fr245"/>
+            <iq:product id="fr245m"/>
 
             <!-- Forerunner 255 Series -->
             <iq:product id="fr255"/>
@@ -28,26 +40,41 @@
             <iq:product id="fr255s"/>
             <iq:product id="fr255sm"/>
 
-            <!-- Forerunner 265 Series (Primary Target) -->
+            <!-- Forerunner 265 Series -->
             <iq:product id="fr265"/>
             <iq:product id="fr265s"/>
 
-            <!-- Forerunner 500 Series -->
+            <!-- Forerunner 570 Series (2025 신규) -->
             <iq:product id="fr57042mm"/>
             <iq:product id="fr57047mm"/>
 
-            <!-- Forerunner 900 Series -->
+            <!-- Forerunner 645 Music -->
+            <iq:product id="fr645m"/>
+
+            <!-- Forerunner 745 -->
+            <iq:product id="fr745"/>
+
+            <!-- Forerunner 935 (Legacy but BLE capable) -->
+            <iq:product id="fr935"/>
+
+            <!-- Forerunner 945 Series -->
             <iq:product id="fr945"/>
             <iq:product id="fr945lte"/>
+
+            <!-- Forerunner 955 Series (Solar 포함) -->
             <iq:product id="fr955"/>
-            <!-- fr955solar: SDK 미지원 -->
+
+            <!-- Forerunner 965/970 -->
             <iq:product id="fr965"/>
             <iq:product id="fr970"/>
 
-            <!-- Forerunner 기타 -->
-            <iq:product id="fr245"/>
-            <iq:product id="fr245m"/>
-            <iq:product id="fr745"/>
+            <!-- ==================== Fenix Series ==================== -->
+            <!-- 멀티스포츠/아웃도어 워치 -->
+
+            <!-- Fenix 5 Plus Series -->
+            <iq:product id="fenix5plus"/>
+            <iq:product id="fenix5splus"/>
+            <iq:product id="fenix5xplus"/>
 
             <!-- Fenix 6 Series -->
             <iq:product id="fenix6"/>
@@ -67,35 +94,78 @@
             <!-- Fenix 8 Series -->
             <iq:product id="fenix843mm"/>
             <iq:product id="fenix847mm"/>
-            <!-- fenix851mm: SDK 미지원 -->
             <iq:product id="fenix8solar47mm"/>
             <iq:product id="fenix8solar51mm"/>
 
-            <!-- Epix Series -->
+            <!-- ==================== Epix Series ==================== -->
             <iq:product id="epix2"/>
             <iq:product id="epix2pro42mm"/>
             <iq:product id="epix2pro47mm"/>
             <iq:product id="epix2pro51mm"/>
 
-            <!-- Enduro Series -->
+            <!-- ==================== Enduro Series ==================== -->
+            <!-- 울트라 러닝 -->
             <iq:product id="enduro"/>
-            <!-- enduro2: SDK 미지원 -->
             <iq:product id="enduro3"/>
 
-            <!-- tactix Series - SDK 8.4.0에서 지원하는 ID만 -->
-            <!-- tactix7, tactix7amoled, tactix847mm, tactix851mm: SDK 미지원 -->
+            <!-- ==================== Venu Series ==================== -->
+            <!-- 라이프스타일/피트니스 - BLE Central 지원 -->
+            <iq:product id="venu"/>
+            <iq:product id="venu2"/>
+            <iq:product id="venu2s"/>
+            <iq:product id="venu2plus"/>
+            <iq:product id="venu3"/>
+            <iq:product id="venu3s"/>
+            <iq:product id="venusq2"/>
+            <iq:product id="venusq2m"/>
 
-            <!-- MARQ Series -->
+            <!-- ==================== Vivoactive Series ==================== -->
+            <!-- 피트니스 워치 - BLE Central 지원 -->
+            <iq:product id="vivoactive3m"/>
+            <iq:product id="vivoactive3mlte"/>
+            <iq:product id="vivoactive4"/>
+            <iq:product id="vivoactive4s"/>
+            <iq:product id="vivoactive5"/>
+
+            <!-- ==================== Instinct Series ==================== -->
+            <!-- 아웃도어/러기드 - BLE Central 지원 -->
+            <iq:product id="instinct2"/>
+            <iq:product id="instinct2s"/>
+            <iq:product id="instinct2x"/>
+
+            <!-- ==================== MARQ Series ==================== -->
+            <!-- 프리미엄/럭셔리 -->
+
+            <!-- MARQ Gen 2 -->
             <iq:product id="marq2"/>
             <iq:product id="marq2aviator"/>
 
-            <!-- D2 Series -->
+            <!-- MARQ Original -->
+            <iq:product id="marqadventurer"/>
+            <iq:product id="marqathlete"/>
+            <iq:product id="marqaviator"/>
+            <iq:product id="marqcaptain"/>
+            <iq:product id="marqcommander"/>
+            <iq:product id="marqdriver"/>
+            <iq:product id="marqexpedition"/>
+            <iq:product id="marqgolfer"/>
+
+            <!-- ==================== D2 Series ==================== -->
+            <!-- 항공용 워치 - BLE Central 지원 -->
+            <iq:product id="d2air"/>
+            <iq:product id="d2airx10"/>
             <iq:product id="d2mach1"/>
-            <!-- d2mach1pro: SDK 미지원 -->
+
+            <!-- ==================== Descent Series ==================== -->
+            <!-- 다이빙 워치 - BLE Central 지원 -->
+            <iq:product id="descentg1"/>
+            <iq:product id="descentmk2"/>
+            <iq:product id="descentmk2s"/>
+
         </iq:products>
 
         <iq:permissions>
-            <!-- BLE Central for iLens connection -->
+            <!-- BLE Central for iLens/rLens connection -->
             <iq:uses-permission id="BluetoothLowEnergy"/>
             <!-- User weight/age for power calculation -->
             <iq:uses-permission id="UserProfile"/>

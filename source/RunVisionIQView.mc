@@ -8,40 +8,23 @@ using Toybox.BluetoothLowEnergy;
 using Toybox.Time;
 using Toybox.Time.Gregorian;
 
-using ILensBLE;
+// using ILensBLE;  // FR55 호환성: Legacy 코드 제거
 using ILensProtocol;
 using DFLogger;
 
-//! iLens BLE Profiles (ActiveLook 참조)
-//! Exercise Data Service
-const ILENS_EXERCISE_PROFILE = {
-    :uuid => BluetoothLowEnergy.stringToUuid("4b329cf2-3816-498c-8453-ee8798502a08"),
-    :characteristics => [
-        { :uuid => BluetoothLowEnergy.stringToUuid("c259c1bd-18d3-c348-b88d-5447aea1b615") }  // Exercise Data
-    ]
-};
-
-//! Device Configuration Service
-const ILENS_CONFIG_PROFILE = {
-    :uuid => BluetoothLowEnergy.stringToUuid("58211c97-482a-2808-2d3e-228405f1e749"),
-    :characteristics => [
-        { :uuid => BluetoothLowEnergy.stringToUuid("54ac7f82-eb87-aa4e-0154-a71d80471e6e") }   // Current Time
-    ]
-};
+//! FR55 호환성: 전역 상수 Profile 제거
+//! 파일 로드 시 BLE API 호출 방지 → lazy 함수로 이동
 
 //! RunVision-IQ DataField - Garmin to iLens AR Bridge
 //! Hybrid: Passive Connection 우선, 없으면 registerProfile() (ActiveLook 참조)
 class RunVisionIQView extends WatchUi.DataField {
 
     // BleDelegate 메서드들을 직접 구현
-
-    // iLens BLE instance (legacy, null 상태 유지)
-    private var _ilens as ILensBLE.ILens or Null;
+    // FR55 호환성: ILensBLE legacy 코드 제거
 
     // BLE Scanner 방식: 직접 관리
     private var _connectedDevice as BluetoothLowEnergy.Device or Null;
     private var _exerciseCharacteristic as BluetoothLowEnergy.Characteristic or Null;
-    private var _currentTimeCharacteristic as BluetoothLowEnergy.Characteristic or Null;  // For elapsed time
     private var _isConnected as Lang.Boolean = false;
     private var _scanStatus as Lang.String = "INIT";
     private var _devicesFound as Lang.Number = 0;
@@ -102,6 +85,16 @@ class RunVisionIQView extends WatchUi.DataField {
     private const RECONNECT_SLOW_INTERVAL = 60;              // 느린 재연결 간격 (초)
     private const RECONNECT_FAST_MAX = 5;                    // 빠른 재연결 최대 횟수
 
+    //! FR55 호환성: Profile을 lazy 생성 (파일 로드 시 BLE API 호출 방지)
+    private function getExerciseProfile() as Lang.Dictionary {
+        return {
+            :uuid => BluetoothLowEnergy.stringToUuid("4b329cf2-3816-498c-8453-ee8798502a08"),
+            :characteristics => [
+                { :uuid => BluetoothLowEnergy.stringToUuid("c259c1bd-18d3-c348-b88d-5447aea1b615") }
+            ]
+        };
+    }
+
     //! Constructor
     function initialize() {
         DataField.initialize();
@@ -111,16 +104,19 @@ class RunVisionIQView extends WatchUi.DataField {
             var delegate = new $.RunVisionBleDelegate(self);
             BluetoothLowEnergy.setDelegate(delegate);
 
-            // 초기화 시 기존 bonding 정보 모두 삭제 (iLens는 multi-bonding 미지원)
-            try {
-                var paired = BluetoothLowEnergy.getPairedDevices();
-                var dev = paired.next() as BluetoothLowEnergy.Device;
-                while (dev != null) {
-                    BluetoothLowEnergy.unpairDevice(dev);
-                    dev = paired.next() as BluetoothLowEnergy.Device;
+            // 초기화 시 기존 bonding 정보 삭제 (iLens는 multi-bonding 미지원)
+            // FR55 호환성: has 연산자로 API 존재 여부 확인
+            if (BluetoothLowEnergy has :getPairedDevices) {
+                try {
+                    var paired = BluetoothLowEnergy.getPairedDevices();
+                    var dev = paired.next() as BluetoothLowEnergy.Device;
+                    while (dev != null) {
+                        BluetoothLowEnergy.unpairDevice(dev);
+                        dev = paired.next() as BluetoothLowEnergy.Device;
+                    }
+                } catch (ex2) {
+                    // 무시
                 }
-            } catch (ex2) {
-                // 무시
             }
 
             _scanStatus = "INIT_OK";
@@ -136,31 +132,34 @@ class RunVisionIQView extends WatchUi.DataField {
     private function checkPairedDevices() as Void {
         try {
             // 기존 페어링 정보 삭제 (iLens가 다른 기기와 페어링되었을 수 있음)
-            var pairedDevices = BluetoothLowEnergy.getPairedDevices();
-            var device = pairedDevices.next() as BluetoothLowEnergy.Device;
-            while (device != null) {
-                try {
-                    BluetoothLowEnergy.unpairDevice(device);
-                    addBleLog("UNPAIR");
-                } catch (ex) {
-                    // 무시
+            // FR55 호환성: has 연산자로 API 존재 여부 확인
+            if (BluetoothLowEnergy has :getPairedDevices) {
+                var pairedDevices = BluetoothLowEnergy.getPairedDevices();
+                var device = pairedDevices.next() as BluetoothLowEnergy.Device;
+                while (device != null) {
+                    try {
+                        BluetoothLowEnergy.unpairDevice(device);
+                        addBleLog("UNPAIR");
+                    } catch (ex) {
+                        // 무시
+                    }
+                    device = pairedDevices.next() as BluetoothLowEnergy.Device;
                 }
-                device = pairedDevices.next() as BluetoothLowEnergy.Device;
             }
 
             // 항상 새로 스캔 (iLens는 multi-bonding 미지원)
             try {
-                BluetoothLowEnergy.registerProfile(ILENS_EXERCISE_PROFILE);
-                BluetoothLowEnergy.registerProfile(ILENS_CONFIG_PROFILE);
-                _scanStatus = "PROF_REG";
+                BluetoothLowEnergy.registerProfile(getExerciseProfile());
+                BluetoothLowEnergy.setScanState(BluetoothLowEnergy.SCAN_STATE_SCANNING);
+                _scanStatus = "SCANNING";
                 addBleLog("SCAN");
             } catch (ex) {
-                _scanStatus = "PROF_ERR";
-                addBleLog("ERR:prof");
+                _scanStatus = "SCAN_ERR";
+                addBleLog("ERR:scan");
             }
         } catch (ex) {
-            _scanStatus = "PAIR_ERR";
-            addBleLog("ERR:pair");
+            _scanStatus = "ERR:init";
+            addBleLog("ERR:init");
         }
     }
 
@@ -247,13 +246,13 @@ class RunVisionIQView extends WatchUi.DataField {
         // Passive Connection 타임아웃 (3초)
         if (_scanStatus.equals("PASSIVE") && !_isConnected && _elapsedSeconds >= 3) {
             try {
-                if (_connectedDevice != null) {
+                // FR55 호환성: has 연산자로 API 존재 여부 확인
+                if (_connectedDevice != null && (BluetoothLowEnergy has :unpairDevice)) {
                     BluetoothLowEnergy.unpairDevice(_connectedDevice);
-                    _connectedDevice = null;
                 }
+                _connectedDevice = null;
                 _profileRegistered = false;
-                BluetoothLowEnergy.registerProfile(ILENS_EXERCISE_PROFILE);
-                BluetoothLowEnergy.registerProfile(ILENS_CONFIG_PROFILE);
+                BluetoothLowEnergy.registerProfile(getExerciseProfile());
                 _scanStatus = "RESCAN";
                 addBleLog("RESCAN");
             } catch (ex) {
@@ -300,12 +299,14 @@ class RunVisionIQView extends WatchUi.DataField {
                     addBleLog("RESCAN:" + _reconnectAttempts);
                     _scanStatus = "RESCAN";
                     try {
-                        // 기존 bonding 삭제
-                        var paired = BluetoothLowEnergy.getPairedDevices();
-                        var dev = paired.next() as BluetoothLowEnergy.Device;
-                        while (dev != null) {
-                            BluetoothLowEnergy.unpairDevice(dev);
-                            dev = paired.next() as BluetoothLowEnergy.Device;
+                        // 기존 bonding 삭제 (FR55 호환성: has 연산자로 확인)
+                        if (BluetoothLowEnergy has :getPairedDevices) {
+                            var paired = BluetoothLowEnergy.getPairedDevices();
+                            var dev = paired.next() as BluetoothLowEnergy.Device;
+                            while (dev != null) {
+                                BluetoothLowEnergy.unpairDevice(dev);
+                                dev = paired.next() as BluetoothLowEnergy.Device;
+                            }
                         }
                         // 새로 스캔 시작
                         BluetoothLowEnergy.setScanState(BluetoothLowEnergy.SCAN_STATE_SCANNING);
@@ -328,19 +329,6 @@ class RunVisionIQView extends WatchUi.DataField {
                 _charRetryCount = 0;  // 성공 시 리셋
                 addBleLog("CHAR OK");
                 _scanStatus = "READY";
-
-                // Also try to get Current Time characteristic (for elapsed time)
-                try {
-                    _currentTimeCharacteristic = tryGetServiceCharacteristic(
-                        ILensProtocol.DEVICE_CONFIG_SERVICE_UUID,
-                        ILensProtocol.CURRENT_TIME_UUID,
-                        2  // 2번 재시도
-                    );
-                    addBleLog("TIME OK");
-                } catch (ex2) {
-                    // Current Time is optional - continue without it
-                    addBleLog("TIME FAIL");
-                }
             } catch (ex) {
                 _charRetryCount++;
                 if (_charRetryCount >= 5) {
@@ -616,7 +604,6 @@ class RunVisionIQView extends WatchUi.DataField {
             _isConnected = false;
             _connectedDevice = null;
             _exerciseCharacteristic = null;
-            _currentTimeCharacteristic = null;
             _charRetryCount = 0;  // 재시도 카운터 리셋
             _connectionStartTime = 0;
             _scanStatus = "DISCONN";
@@ -812,8 +799,11 @@ class RunVisionBleDelegate extends BluetoothLowEnergy.BleDelegate {
                 }
 
                 // "ilens" 또는 "rlens" 포함 시 인식 (case-insensitive, 하위호환)
-                if (rawStr.toLower().find("ilens") != null || rawStr.toLower().find("rlens") != null) {
+                // FIX: find()는 못 찾으면 -1 반환 (null 아님!)
+                var lowerStr = rawStr.toLower();
+                if (lowerStr.find("ilens") != -1 || lowerStr.find("rlens") != -1) {
                     _view.onScanResult(r);
+                    return;  // 찾으면 즉시 종료
                 }
             }
 
