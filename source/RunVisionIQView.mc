@@ -92,6 +92,12 @@ class RunVisionIQView extends WatchUi.DataField {
     private const RECONNECT_SLOW_INTERVAL = 60;              // 느린 재연결 간격 (초)
     private const RECONNECT_FAST_MAX = 5;                    // 빠른 재연결 최대 횟수
 
+    // ✅ Pairing 타임아웃 (Connecting 상태 멈춤 방지)
+    private var _pairingStartTime as Lang.Number = 0;        // 페어링 시작 시간 (초)
+    private var _pairingRetryCount as Lang.Number = 0;       // 페어링 재시도 횟수
+    private const PAIRING_TIMEOUT_SEC = 3;                   // 3초 타임아웃
+    private const PAIRING_MAX_RETRIES = 3;                   // 최대 3회 재시도
+
     //! FR55 호환성: Profile을 lazy 생성 (파일 로드 시 BLE API 호출 방지)
     private function getExerciseProfile() as Lang.Dictionary {
         return {
@@ -267,6 +273,48 @@ class RunVisionIQView extends WatchUi.DataField {
             }
         }
 
+        // ✅ Pairing 타임아웃 (Connecting 상태 멈춤 방지)
+        // iLens가 다른 기기에 연결되었다가 올 때 연결이 안 되는 문제 해결
+        if (_pairingStartTime > 0 && !_isConnected) {
+            var pairingDuration = _elapsedSeconds - _pairingStartTime;
+            if (pairingDuration >= PAIRING_TIMEOUT_SEC) {
+                _pairingRetryCount++;
+                addBleLog("PAIR_TO:" + _pairingRetryCount);  // Pairing Timeout + retry count
+                _pairingStartTime = 0;
+
+                try {
+                    if (_connectedDevice != null && (BluetoothLowEnergy has :unpairDevice)) {
+                        BluetoothLowEnergy.unpairDevice(_connectedDevice);
+                    }
+                    _connectedDevice = null;
+                    _isReconnecting = false;
+                } catch (ex) {
+                    // 무시
+                }
+
+                if (_pairingRetryCount >= PAIRING_MAX_RETRIES) {
+                    // 3회 실패 → CONN_ERR
+                    _scanStatus = "CONN_ERR";
+                    _pairingRetryCount = 0;
+                    addBleLog("CONN_ERR");
+                } else {
+                    // 재시도: 즉시 다시 pairing
+                    _scanStatus = "RETRY " + _pairingRetryCount;
+                    if (_lastScanResult != null) {
+                        try {
+                            _pairingStartTime = _elapsedSeconds;
+                            _connectedDevice = BluetoothLowEnergy.pairDevice(_lastScanResult);
+                            if (_connectedDevice == null) {
+                                _pairingStartTime = 0;
+                            }
+                        } catch (ex) {
+                            _pairingStartTime = 0;
+                        }
+                    }
+                }
+            }
+        }
+
         // Auto-reconnect (연결 끊김 시)
         // 전략: 1-5회는 5초 간격 단순 재연결, 6회째 unpair 후 재스캔, 이후 1분마다 재스캔
         if (_needsReconnect && !_isConnected && !_isReconnecting) {
@@ -294,12 +342,15 @@ class RunVisionIQView extends WatchUi.DataField {
                     addBleLog("RE:" + _reconnectAttempts);
                     _scanStatus = "RECONN " + _reconnectAttempts;
                     try {
+                        _pairingStartTime = _elapsedSeconds;  // ✅ 타임아웃 추적 시작
                         _connectedDevice = BluetoothLowEnergy.pairDevice(_lastScanResult);
                         if (_connectedDevice == null) {
                             _isReconnecting = false;
+                            _pairingStartTime = 0;  // 실패 시 리셋
                         }
                     } catch (ex) {
                         _isReconnecting = false;
+                        _pairingStartTime = 0;  // 실패 시 리셋
                     }
                 } else {
                     // 6회 이후: unpair 후 새로 스캔
@@ -616,6 +667,8 @@ class RunVisionIQView extends WatchUi.DataField {
             _isConnected = true;
             _connectedDevice = device;
             _connectionStartTime = _elapsedSeconds;
+            _pairingStartTime = 0;  // ✅ 타임아웃 추적 종료
+            _pairingRetryCount = 0; // ✅ 재시도 카운터 리셋
             _reconnectAttempts = 0;
             _charRetryCount = 0;  // Characteristic 검색 카운터 리셋
             _needsReconnect = false;
@@ -629,6 +682,7 @@ class RunVisionIQView extends WatchUi.DataField {
             _exerciseCharacteristic = null;
             _charRetryCount = 0;  // 재시도 카운터 리셋
             _connectionStartTime = 0;
+            _pairingStartTime = 0;  // ✅ 타임아웃 추적 종료
             // 속도 감지 리셋 (재연결 시 다시 측정)
             _useDefaultWrite = false;
             _writeStartTime = 0;
@@ -771,10 +825,12 @@ class RunVisionIQView extends WatchUi.DataField {
             BluetoothLowEnergy.setScanState(BluetoothLowEnergy.SCAN_STATE_OFF);
 
             addBleLog("PAIRING");
+            _pairingStartTime = _elapsedSeconds;  // ✅ 타임아웃 추적 시작
             _connectedDevice = BluetoothLowEnergy.pairDevice(scanResult);
 
             if (_connectedDevice == null) {
                 _scanStatus = "PAIR_FAIL";
+                _pairingStartTime = 0;  // 실패 시 리셋
             } else {
                 _scanStatus = "PAIRING";
             }
