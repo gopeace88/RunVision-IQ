@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!-- RunVision-IQ - Garmin Connect IQ DataField -->
 <!-- iLens/rLens AR 글래스 연동 러닝/사이클링 메트릭 디스플레이 -->
-<!-- BLE Central 지원 러닝/피트니스 기기 (84개, 2026-01-21 업데이트) -->
+<!-- BLE Central 지원 러닝/피트니스 기기 (82개 활성, 2026-01-21 업데이트) -->
 <iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="3">
     <iq:application
         entry="RunVisionIQApp"
@@ -96,7 +96,7 @@
             <iq:product id="fenix8solar47mm"/>
             <iq:product id="fenix8solar51mm"/>
             <iq:product id="fenix8pro47mm"/>
-            <iq:product id="fenix8pro51mm"/>
+            <!-- <iq:product id="fenix8pro51mm"/> SDK 8.4.0에 없음 (향후 추가 예정) -->
             <iq:product id="fenixe"/>
 
             <!-- ==================== Epix Series ==================== -->
@@ -143,7 +143,7 @@
             <iq:product id="instinct3amoled45mm"/>
             <iq:product id="instinct3amoled50mm"/>
             <iq:product id="instinct3solar45mm"/>
-            <iq:product id="instinct3solar50mm"/>
+            <!-- <iq:product id="instinct3solar50mm"/> SDK 8.4.0에 없음 (향후 추가 예정) -->
             <iq:product id="instinctcrossover"/>
             <iq:product id="instinctcrossoveramoled"/>
             <iq:product id="instincte40mm"/>

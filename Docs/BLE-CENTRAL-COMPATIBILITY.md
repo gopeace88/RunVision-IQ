@@ -27,7 +27,9 @@ Build for a device and check if BLE APIs are available in the simulator.
 |--------|-------|-------|--------------|
 | **Garmin Official** | 120+ | All BLE Central devices | 2026-01 |
 | **ActiveLook** | 77 | Cycling + Premium watches | 2025-07 |
-| **RunVision-IQ** | 84 | Running/Fitness | 2026-01-21 |
+| **RunVision-IQ** | 82* | Running/Fitness | 2026-01-21 |
+
+*\* 2개 기기(fenix8pro51mm, instinct3solar50mm)는 SDK 8.4.0에 미포함되어 주석 처리됨*
 
 ---
 
@@ -106,7 +108,7 @@ Source: https://github.com/ActiveLook/Garmin-Datafield-sample-code/blob/master/m
 
 ---
 
-## 3. RunVision-IQ Device List (84 devices)
+## 3. RunVision-IQ Device List (82 devices active)
 
 ### Included Devices
 | Series | Count | Device IDs |
@@ -115,13 +117,19 @@ Source: https://github.com/ActiveLook/Garmin-Datafield-sample-code/blob/master/m
 | **Fenix 5+** | 3 | fenix5plus, fenix5splus, fenix5xplus |
 | **Fenix 6** | 5 | fenix6, fenix6s, fenix6pro, fenix6spro, fenix6xpro |
 | **Fenix 7** | 6 | fenix7, fenix7s, fenix7x, fenix7pro, fenix7spro, fenix7xpro |
-| **Fenix 8** | 7 | fenix843mm, fenix847mm, fenix8solar47mm, fenix8solar51mm, fenix8pro47mm, fenix8pro51mm, fenixe |
+| **Fenix 8** | 6 | fenix843mm, fenix847mm, fenix8solar47mm, fenix8solar51mm, fenix8pro47mm, fenixe |
 | **Epix** | 4 | epix2, epix2pro42mm, epix2pro47mm, epix2pro51mm |
 | **Enduro** | 2 | enduro, enduro3 |
 | **Venu** | 10 | venu, venu2, venu2s, venu2plus, venu3, venu3s, venusqm, venusq2m, venu441mm, venu445mm |
 | **Vivoactive** | 6 | vivoactive3m, vivoactive3mlte, vivoactive4, vivoactive4s, vivoactive5, vivoactive6 |
-| **Instinct** | 11 | instinct2, instinct2s, instinct2x, instinct3amoled45mm, instinct3amoled50mm, instinct3solar45mm, instinct3solar50mm, instinctcrossover, instinctcrossoveramoled, instincte40mm, instincte45mm |
+| **Instinct** | 10 | instinct2, instinct2s, instinct2x, instinct3amoled45mm, instinct3amoled50mm, instinct3solar45mm, instinctcrossover, instinctcrossoveramoled, instincte40mm, instincte45mm |
 | **MARQ** | 10 | marq2, marq2aviator, marqadventurer, marqathlete, marqaviator, marqcaptain, marqcommander, marqdriver, marqexpedition, marqgolfer |
+
+### SDK 8.4.0 미지원 기기 (주석 처리됨)
+| Device ID | Reason |
+|-----------|--------|
+| fenix8pro51mm | SDK 8.4.0에 존재하지 않음 (향후 추가 예정) |
+| instinct3solar50mm | SDK 8.4.0에 존재하지 않음 (향후 추가 예정) |
 
 ### NOT in RunVision-IQ (Excluded)
 | Category | Devices | Reason |
@@ -180,3 +188,4 @@ Source: https://github.com/ActiveLook/Garmin-Datafield-sample-code/blob/master/m
 | 2026-01-21 | Initial documentation |
 | 2026-01-21 | Removed D2/Descent series (10 devices) |
 | 2026-01-21 | Added three-way comparison (Official/ActiveLook/RunVision-IQ) |
+| 2026-01-21 | SDK 8.4.0 검증: fenix8pro51mm, instinct3solar50mm 미지원 확인 (82개 활성) |
