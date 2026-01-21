@@ -167,7 +167,7 @@
             <iq:product id="marqgolfer"/>
 
             <!-- D2/Descent/Edge/Approach 시리즈 제외 (러닝과 무관) -->
-            <!-- 상세: Docs/runvision-iq/BLE-CENTRAL-COMPATIBILITY.md -->
+            <!-- 상세: Docs/BLE-CENTRAL-COMPATIBILITY.md -->
 
         </iq:products>
 
