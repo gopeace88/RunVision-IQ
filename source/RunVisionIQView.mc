@@ -74,9 +74,16 @@ class RunVisionIQView extends WatchUi.DataField {
     private var _weightInitialized as Lang.Boolean = false;  // 체중 초기화 플래그
 
     // Write Queue (Flutter 방식: 1초마다 모든 메트릭 순차 전송)
-    // iLens는 WRITE_WITH_RESPONSE만 지원 → 순차 전송 필요
     private var _writeQueue as Lang.Array<Lang.ByteArray> = [] as Lang.Array<Lang.ByteArray>;
     private var _isWriting as Lang.Boolean = false;  // Write 진행 중 플래그
+
+    // BLE Write 속도 자동 감지
+    // - 빠른 기기 (FR165+): WRITE_WITH_RESPONSE (~80ms) → 5개/초 OK
+    // - 느린 기기 (FR55):   WRITE_TYPE_DEFAULT 사용 → 빠르게 전송
+    private var _useDefaultWrite as Lang.Boolean = false;  // true면 DEFAULT 사용
+    private var _writeStartTime as Lang.Number = 0;        // 첫 Write 시작 시간 (ms)
+    private var _speedDetected as Lang.Boolean = false;    // 속도 감지 완료 여부
+    private const SLOW_DEVICE_THRESHOLD_MS = 500;          // 500ms 이상이면 느린 기기
 
     // 자동 재연결 관련 변수 (추가)
     private var _lastReconnectTime as Lang.Number = 0;       // 마지막 재연결 시도 시간 (초)
@@ -570,6 +577,22 @@ class RunVisionIQView extends WatchUi.DataField {
             return;
         }
 
+        // 속도 감지 (첫 Write 콜백 시)
+        if (!_speedDetected && _writeStartTime > 0) {
+            var elapsed = System.getTimer() - _writeStartTime;
+            _speedDetected = true;
+            _writeStartTime = 0;
+
+            if (elapsed > SLOW_DEVICE_THRESHOLD_MS) {
+                // 느린 기기 → DEFAULT 모드로 전환
+                _useDefaultWrite = true;
+                addBleLog("MODE:DEFAULT");
+            } else {
+                // 빠른 기기 → WITH_RESPONSE 유지
+                addBleLog("MODE:RESPONSE");
+            }
+        }
+
         // 다음 패킷 전송
         processWriteQueue();
     }
@@ -606,6 +629,10 @@ class RunVisionIQView extends WatchUi.DataField {
             _exerciseCharacteristic = null;
             _charRetryCount = 0;  // 재시도 카운터 리셋
             _connectionStartTime = 0;
+            // 속도 감지 리셋 (재연결 시 다시 측정)
+            _useDefaultWrite = false;
+            _writeStartTime = 0;
+            _speedDetected = false;
             _scanStatus = "DISCONN";
             addBleLog("DISCONN");
 
@@ -674,6 +701,9 @@ class RunVisionIQView extends WatchUi.DataField {
     }
 
     //! Send data to iLens (WRITE_WITH_RESPONSE only)
+    //! Send data to iLens with auto-detected Write Type
+    //! - 빠른 기기: WRITE_WITH_RESPONSE (안정적, ~80ms)
+    //! - 느린 기기: WRITE_TYPE_DEFAULT (빠름, FR55용)
     private function sendToILens(packet as Lang.ByteArray) as Void {
         if (_exerciseCharacteristic == null) {
             _isWriting = false;
@@ -681,7 +711,18 @@ class RunVisionIQView extends WatchUi.DataField {
         }
 
         try {
-            _exerciseCharacteristic.requestWrite(packet, {:writeType => BluetoothLowEnergy.WRITE_TYPE_WITH_RESPONSE});
+            // 속도 측정 시작 (첫 Write 시)
+            if (!_speedDetected && _writeStartTime == 0) {
+                _writeStartTime = System.getTimer();
+            }
+
+            // Write Type 선택
+            var writeType = BluetoothLowEnergy.WRITE_TYPE_WITH_RESPONSE;
+            if (_useDefaultWrite) {
+                writeType = BluetoothLowEnergy.WRITE_TYPE_DEFAULT;
+            }
+
+            _exerciseCharacteristic.requestWrite(packet, {:writeType => writeType});
         } catch (ex) {
             addTxLog("ERR:tx");
             _isWriting = false;
