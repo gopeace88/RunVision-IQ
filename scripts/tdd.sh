@@ -12,7 +12,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # 경로 설정
-PROJECT_DIR="/mnt/d/00.Projects/00.RunVision-IQ"
+PROJECT_DIR="/home/jhkim/00.Projects/00.RunVision-IQ"
 WIN_PROJECT_DIR="D:\\00.Projects\\00.RunVision-IQ"
 SDK_LIN="/home/jhkim/.Garmin/ConnectIQ/Sdks/connectiq-sdk-lin-8.3.0-2025-09-22-5813687a0"
 SDK_WIN='C:\Users\jinhee\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.3.0-2025-09-22-5813687a0\bin'
