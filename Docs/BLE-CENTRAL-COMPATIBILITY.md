@@ -1,191 +1,138 @@
-# BLE Central Compatibility for RunVision-IQ
+# RunVision-IQ BLE Central Compatibility
 
-## Overview
-
-RunVision-IQ requires **BLE Central** (Toybox.BluetoothLowEnergy) capability to connect to iLens/rLens AR glasses. Not all Garmin devices support this feature.
-
-## How to Check BLE Central Support
-
-### 1. Official Garmin API Documentation
-The definitive source for BLE Central support:
-- https://developer.garmin.com/connect-iq/api-docs/Toybox/BluetoothLowEnergy.html
-
-### 2. ActiveLook Reference
-ActiveLook (similar AR glasses project) maintains a tested device list:
-- https://github.com/ActiveLook/Garmin-Datafield-sample-code
-
-### 3. SDK Device Simulator
-Build for a device and check if BLE APIs are available in the simulator.
+> ⭐ **이 문서는 RunVision-IQ 호환 기기의 기준 문서입니다.**
+> 기기 추가/제거 시 반드시 이 문서를 먼저 업데이트하고, manifest.xml에 반영하세요.
 
 ---
 
-## Three Device Lists Comparison
+## 판단 기준 (필수 참조)
 
-### Summary Table
+기기 호환성을 판단할 때 아래 3가지 기준을 순서대로 적용합니다.
 
-| Source | Total | Focus | Last Updated |
-|--------|-------|-------|--------------|
-| **Garmin Official** | 120+ | All BLE Central devices | 2026-01 |
-| **ActiveLook** | 77 | Cycling + Premium watches | 2025-07 |
-| **RunVision-IQ** | 82* | Running/Fitness | 2026-01-21 |
+### 기준 1 — ActiveLook Manifest (최우선 검증 레퍼런스)
 
-*\* 2개 기기(fenix8pro51mm, instinct3solar50mm)는 SDK 8.4.0에 미포함되어 주석 처리됨*
+> ActiveLook은 동일한 BLE Central API를 사용해 AR 글래스와 연동하는 실제 출시 제품.
+> 실사용 사용자들이 검증한 목록이므로 RunVision-IQ의 가장 신뢰할 수 있는 기준점.
 
----
+- ActiveLook manifest에 포함된 기기(러닝/피트니스 관련) → **무조건 포함**
+- 출처: https://github.com/ActiveLook/Garmin-Datafield-sample-code/blob/master/manifest.xml
 
-## 1. Garmin Official BLE Central Device List (120+ devices)
+### 기준 2 — SDK 기반 검증
 
-Source: https://developer.garmin.com/connect-iq/api-docs/Toybox/BluetoothLowEnergy.html
+기기가 Connect IQ SDK에서 다음 세 가지를 **모두** 지원해야 함:
+1. `Toybox.BluetoothLowEnergy` — BLE Central 역할 (iLens/rLens 연결에 필수)
+2. Running 액티비티 지원 — DataField가 실행되는 활동 컨텍스트
+3. DataField 앱 타입 지원 — 앱 자체가 설치/실행 가능해야 함
 
-### Watches - Running/Fitness
-| Series | Device IDs |
-|--------|------------|
-| **Forerunner** | fr55, fr165, fr165m, fr245, fr245m, fr255, fr255m, fr255s, fr255sm, fr265, fr265s, fr57042mm, fr57047mm, fr645m, fr745, fr945, fr945lte, fr955, fr965, fr970 |
-| **Fenix 5+** | fenix5plus, fenix5splus, fenix5xplus |
-| **Fenix 6** | fenix6, fenix6s, fenix6pro, fenix6spro, fenix6xpro |
-| **Fenix 7** | fenix7, fenix7s, fenix7x, fenix7pro, fenix7spro, fenix7xpro, fenix7pronowifi, fenix7xpronowifi |
-| **Fenix 8** | fenix843mm, fenix847mm, fenix8solar47mm, fenix8solar51mm, fenix8pro47mm, fenix8pro51mm, fenixe |
-| **Epix** | epix2, epix2pro42mm, epix2pro47mm, epix2pro51mm |
-| **Enduro** | enduro, enduro2, enduro3 |
-| **Venu** | venu, venu2, venu2s, venu2plus, venu3, venu3s, venu441mm, venu445mm, venusqm, venusq2m, venux1, venumercedesbenz |
-| **Vivoactive** | vivoactive3m, vivoactive3mlte, vivoactive4, vivoactive4s, vivoactive5, vivoactive6 |
-| **Instinct 2** | instinct2, instinct2s, instinct2x + Solar/Tactical variants |
-| **Instinct 3** | instinct3amoled45mm, instinct3amoled50mm, instinct3solar45mm, instinct3solar50mm |
-| **Instinct Other** | instinctcrossover, instinctcrossoveramoled, instincte40mm, instincte45mm |
-| **MARQ Gen 1** | marqadventurer, marqathlete, marqaviator, marqcaptain, marqcommander, marqdriver, marqexpedition, marqgolfer |
-| **MARQ Gen 2** | marq2, marq2aviator |
+> ⚠️ 공식 Garmin BLE Central 문서 목록은 참고용이며 완전하지 않음.
+> Venu Gen 1이 문서에는 있으나 실제로는 DataField 미지원 사례 확인됨.
 
-### Watches - Specialty (Not in RunVision-IQ)
-| Series | Device IDs | Purpose |
-|--------|------------|---------|
-| **D2** | d2air, d2airx10, d2x15, d2mach1, d2mach2 | Aviation |
-| **Descent** | descentg1, descentg1solar, descentg2, descentmk2, descentmk2i, descentmk2s, descentmk343mm, descentmk3i43mm, descentmk3i51mm | Diving |
-| **Approach** | approachs50, approachs7042mm, approachs7047mm | Golf |
-| **Marvel/SW** | captainmarvel, darthvader, firstavenger, rey | Limited Edition |
+### 기준 3 — 출시 연도 안전 기준
 
-### Cycling Computers (Not in RunVision-IQ)
-| Series | Device IDs |
-|--------|------------|
-| **Edge** | edge530, edge540, edge540solar, edge550, edge830, edge840, edge840solar, edge850, edge1030, edge1030plus, edge1040, edge1040solar, edge1050, edgeexplore, edgeexplore2, edgemtb |
+> ActiveLook manifest에 포함된 기기 중 가장 오래된 것은 **Fenix 5 Plus (2018년)**.
+> ActiveLook에 없는 기기가 이 연도와 같거나 이전 출시라면 안전성을 위해 제거.
 
-### Handheld GPS (Not in RunVision-IQ)
-| Series | Device IDs |
-|--------|------------|
-| **GPSMAP** | gpsmap66s, gpsmap66i, gpsmap66sr, gpsmap66st, gpsmap67, gpsmap67i, gpsmapH1, gpsmapH1iPlus |
-| **Montana** | montana7 series |
-| **eTrex** | etrextouch |
+- ActiveLook에 없는 기기 + 2019년 이전 출시 → **제거**
+- ActiveLook에 없는 기기 + 2021년 이후 출시 → 기준 2 확인 후 포함 가능
+- 동일 세대/동일 하드웨어 기기가 ActiveLook에 있으면 포함 가능 (예: fr245m ↔ fr245)
 
 ---
 
-## 2. ActiveLook Device List (77 devices)
+## 호환 기기 목록 (77개 활성 — 2026-03-15 기준)
 
-Source: https://github.com/ActiveLook/Garmin-Datafield-sample-code/blob/master/manifest.xml
+### Tier 1: ActiveLook 실사용 검증 (61개, 러닝/피트니스 관련)
 
-### Included Devices
-| Series | Count | Device IDs |
-|--------|-------|------------|
+사이클링 컴퓨터(Edge), 항공(D2), 다이빙(Descent), 골프(Approach)는 제외.
+
+| 시리즈 | 수 | Product IDs |
+|--------|-----|------------|
 | **Forerunner** | 17 | fr165, fr165m, fr245m, fr255, fr255m, fr255s, fr255sm, fr265, fr265s, fr57042mm, fr57047mm, fr745, fr945, fr945lte, fr955, fr965, fr970 |
-| **Fenix** | 20 | fenix5plus, fenix5splus, fenix5xplus, fenix6pro, fenix6spro, fenix6xpro, fenix7, fenix7s, fenix7x, fenix7pro, fenix7spro, fenix7xpro, fenix7pronowifi, fenix7xpronowifi, fenix843mm, fenix847mm, fenix8pro47mm, fenix8solar47mm, fenix8solar51mm, fenixe |
-| **Epix** | 4 | epix2, epix2pro42mm, epix2pro47mm, epix2pro51mm |
-| **Enduro** | 1 | enduro3 |
-| **Venu** | 6 | venu2, venu2s, venu2plus, venu3, venu3s, venusq2m |
-| **Vivoactive** | 2 | vivoactive5, vivoactive6 |
-| **MARQ** | 10 | marq2, marq2aviator, marqadventurer, marqathlete, marqaviator, marqcaptain, marqcommander, marqdriver, marqexpedition, marqgolfer |
-| **Edge** | 10 | edge530, edge540, edge830, edge840, edge1030, edge1030plus, edge1040, edge1050, edgeexplore, edgeexplore2 |
-| **D2** | 2 | d2airx10, d2mach1 |
-| **Descent** | 4 | descentmk2, descentmk2s, descentmk343mm, descentmk351mm |
-| **Approach** | 2 | approachs7042mm, approachs7047mm |
-| **Venu X** | 1 | venux1 |
+| **fēnix® 5 Plus** | 3 | fenix5plus, fenix5splus, fenix5xplus |
+| **fēnix® 6 Pro** | 3 | fenix6pro, fenix6spro, fenix6xpro |
+| **fēnix® 7** | 8 | fenix7, fenix7s, fenix7x, fenix7pro, fenix7spro, fenix7xpro, fenix7pronowifi, fenix7xpronowifi |
+| **fēnix® 8** | 6 | fenix843mm, fenix847mm, fenix8pro47mm, fenix8solar47mm, fenix8solar51mm, fenixe |
+| **epix™** | 4 | epix2, epix2pro42mm, epix2pro47mm, epix2pro51mm |
+| **Enduro™** | 1 | enduro3 |
+| **Venu®** | 6 | venu2, venu2s, venu2plus, venu3, venu3s, venusq2m |
+| **vívoactive®** | 2 | vivoactive5, vivoactive6 |
+| **MARQ®** | 10 | marq2, marq2aviator, marqadventurer, marqathlete, marqaviator, marqcaptain, marqcommander, marqdriver, marqexpedition, marqgolfer |
+| **Venu® X** | 1 | venux1 |
 
-### NOT in ActiveLook (Missing)
-- ❌ FR55, FR245, FR645M (entry-level runners)
-- ❌ Fenix 6 non-Pro (fenix6, fenix6s)
-- ❌ Enduro 1, Enduro 2
-- ❌ Venu (original), Venu 4 series, Venu Sq Music
-- ❌ Vivoactive 3/4 series
-- ❌ **Instinct series (entire)** - 11 devices
-- ❌ fenix8pro51mm
+### Tier 2: 동일 하드웨어 세대 (ActiveLook 기기와 동일 플랫폼, 3개)
 
----
+| Product ID | 근거 | 출시 |
+|------------|------|------|
+| fr245 | fr245m(Music)이 ActiveLook에 포함 — 동일 하드웨어 | 2019 |
+| fenix6 | fenix6pro가 ActiveLook에 포함 — 동일 세대 | 2019 |
+| fenix6s | fenix6spro가 ActiveLook에 포함 — 동일 세대 | 2019 |
 
-## 3. RunVision-IQ Device List (82 devices active)
+### Tier 3: 신규 기기 (2021년 이후, 기준 2 충족 확인, 13개)
 
-### Included Devices
-| Series | Count | Device IDs |
-|--------|-------|------------|
-| **Forerunner** | 20 | fr55, fr165, fr165m, fr245, fr245m, fr255, fr255m, fr255s, fr255sm, fr265, fr265s, fr57042mm, fr57047mm, fr645m, fr745, fr945, fr945lte, fr955, fr965, fr970 |
-| **Fenix 5+** | 3 | fenix5plus, fenix5splus, fenix5xplus |
-| **Fenix 6** | 5 | fenix6, fenix6s, fenix6pro, fenix6spro, fenix6xpro |
-| **Fenix 7** | 6 | fenix7, fenix7s, fenix7x, fenix7pro, fenix7spro, fenix7xpro |
-| **Fenix 8** | 6 | fenix843mm, fenix847mm, fenix8solar47mm, fenix8solar51mm, fenix8pro47mm, fenixe |
-| **Epix** | 4 | epix2, epix2pro42mm, epix2pro47mm, epix2pro51mm |
-| **Enduro** | 2 | enduro, enduro3 |
-| **Venu** | 10 | venu, venu2, venu2s, venu2plus, venu3, venu3s, venusqm, venusq2m, venu441mm, venu445mm |
-| **Vivoactive** | 6 | vivoactive3m, vivoactive3mlte, vivoactive4, vivoactive4s, vivoactive5, vivoactive6 |
-| **Instinct** | 10 | instinct2, instinct2s, instinct2x, instinct3amoled45mm, instinct3amoled50mm, instinct3solar45mm, instinctcrossover, instinctcrossoveramoled, instincte40mm, instincte45mm |
-| **MARQ** | 10 | marq2, marq2aviator, marqadventurer, marqathlete, marqaviator, marqcaptain, marqcommander, marqdriver, marqexpedition, marqgolfer |
+| Product ID | 시리즈 | 출시 | 근거 |
+|------------|--------|------|------|
+| fr55 | Forerunner 55 | 2021 | 러닝 워치, BLE Central 지원 |
+| enduro | Enduro™ (Gen 1) | 2021 | enduro3이 ActiveLook에 포함 — 동일 계열 |
+| instinct2 | Instinct® 2 | 2022 | 신형, BLE Central 지원 |
+| instinct2s | Instinct® 2S | 2022 | 신형, BLE Central 지원 |
+| instinct2x | Instinct® 2X | 2023 | 신형, BLE Central 지원 |
+| instinct3amoled45mm | Instinct® 3 AMOLED 45mm | 2024 | 신형 |
+| instinct3amoled50mm | Instinct® 3 AMOLED 50mm | 2024 | 신형 |
+| instinct3solar45mm | Instinct® 3 Solar 45mm | 2024 | 신형 |
+| instinctcrossover | Instinct® Crossover | 2022 | 신형, BLE Central 지원 |
+| instinctcrossoveramoled | Instinct® Crossover AMOLED | 2023 | 신형 |
+| instincte40mm | Instinct® E 40mm | 2024 | 신형 |
+| instincte45mm | Instinct® E 45mm | 2024 | 신형 |
+| venu441mm | Venu® 4 41mm | 2024 | 신형, venusq2m이 ActiveLook에 포함 |
+| venu445mm | Venu® 4 45mm | 2024 | 신형 |
 
-### SDK 8.4.0 미지원 기기 (주석 처리됨)
-| Device ID | Reason |
-|-----------|--------|
-| fenix8pro51mm | SDK 8.4.0에 존재하지 않음 (향후 추가 예정) |
-| instinct3solar50mm | SDK 8.4.0에 존재하지 않음 (향후 추가 예정) |
-
-### NOT in RunVision-IQ (Excluded)
-| Category | Devices | Reason |
-|----------|---------|--------|
-| **D2 Series** | d2air, d2airx10, d2mach1, d2mach2 | Aviation-focused |
-| **Descent Series** | descentg1, descentg2, descentmk2, descentmk2s, descentmk343mm, descentmk3i51mm | Diving-focused |
-| **Edge Series** | All 16 devices | Cycling computers |
-| **Approach** | approachs50, approachs7042mm, approachs7047mm | Golf |
-| **GPSMAP/Montana** | All handheld devices | Navigation, not wearable |
-| **Limited Edition** | Marvel/Star Wars editions | Rare, same as base model |
+> **참고**: Tier 3는 14개이지만 enduro가 Tier 1의 enduro3과 같은 계열이므로 실질 신규 13개.
 
 ---
 
-## Detailed Comparison: RunVision-IQ vs ActiveLook
+## 제외 기기
 
-### RunVision-IQ Only (Not in ActiveLook) - 27 devices
+### ActiveLook 기준 적용 제외 (기준 1+3)
 
-| Series | Devices | Reason for Inclusion |
-|--------|---------|---------------------|
-| **Forerunner** | fr55, fr245, fr645m | Entry/mid-level runners - large user base |
-| **Fenix 6** | fenix6, fenix6s | Non-Pro still popular |
-| **Fenix 7** | - | (All included in both) |
-| **Fenix 8** | fenix8pro51mm | Larger size option |
-| **Enduro** | enduro | Original ultra running watch |
-| **Venu** | venu, venu441mm, venu445mm, venusqm | Original Venu + Venu 4 series |
-| **Vivoactive** | vivoactive3m, vivoactive3mlte, vivoactive4, vivoactive4s | Fitness watch users |
-| **Instinct** | **All 11 devices** | Trail runners, outdoor athletes |
+| Product ID | 제외 이유 |
+|------------|---------|
+| fr645m | ActiveLook 미포함, 2018년 출시, 동일 세대 대응 기기 없음 |
+| venu | **DataField 미지원 실사용 확인**, ActiveLook 미포함 |
+| venusqm | ActiveLook 미포함, 2020년 출시 (Venu Gen 1과 동일 세대) |
+| vivoactive3m | ActiveLook 미포함, 2018년 출시 |
+| vivoactive3mlte | ActiveLook 미포함, 2018년 출시 |
+| vivoactive4 | ActiveLook 미포함, 2019년 출시 |
+| vivoactive4s | ActiveLook 미포함, 2019년 출시 |
 
-### ActiveLook Only (Not in RunVision-IQ) - 20 devices
+### 용도 미해당 제외 (비러닝/비손목착용)
 
-| Series | Devices | Reason for Exclusion |
-|--------|---------|---------------------|
-| **Edge** | 10 devices | Cycling computers - no wrist HR |
-| **D2** | d2airx10, d2mach1 | Aviation |
-| **Descent** | 4 devices | Diving |
-| **Approach** | 2 devices | Golf |
-| **Fenix 7** | fenix7pronowifi, fenix7xpronowifi | NoWifi variants (rare) |
-| **Venu X** | venux1 | New model, not yet tested |
+| 카테고리 | 기기 | 이유 |
+|----------|------|------|
+| **Edge 시리즈** | edge530~edgemtb | 사이클링 컴퓨터 (손목 착용 아님) |
+| **D2 시리즈** | d2air, d2airx10, d2x15, d2mach1, d2mach1pro, d2mach2 | 항공 특화 |
+| **Descent 시리즈** | descentg1~descentmk3i51mm | 다이빙 특화 |
+| **Approach 시리즈** | approachs50, approachs7042mm, approachs7047mm | 골프 특화 |
+| **GPSMAP/Montana** | 전체 | 핸드헬드 (손목 착용 아님) |
 
-### Strategic Differences
+### SDK 미포함 / 확인 필요
 
-| Aspect | RunVision-IQ | ActiveLook |
-|--------|--------------|------------|
-| **Primary Target** | Runners | Cyclists |
-| **Instinct Support** | ✅ Full (11 devices) | ❌ None |
-| **Edge Support** | ❌ None | ✅ Full (10 devices) |
-| **Entry-Level FR** | ✅ FR55, FR245 | ❌ Missing |
-| **Vivoactive 3/4** | ✅ Included | ❌ Missing |
+| Product ID | 상태 |
+|------------|------|
+| fenix8pro51mm | `fenix8pro47mm`이 51mm까지 커버하는지 빌드 테스트 필요 |
+| instinct3solar50mm | `instinct3solar45mm`이 커버하는지 빌드 테스트 필요 |
+| enduro2 | 2022년 출시, ActiveLook 미포함. Tier 3 추가 검토 가능 |
+
+> **참고**: quatix, tactix, Mercedes-Benz Venu, ForeAthlete 등은 별도 product ID가 아닌
+> 기존 fenix/venu/fr 시리즈의 마케팅 별칭(alias)임. manifest 추가 불필요.
 
 ---
 
 ## Version History
 
-| Date | Change |
-|------|--------|
-| 2026-01-21 | Initial documentation |
-| 2026-01-21 | Removed D2/Descent series (10 devices) |
-| 2026-01-21 | Added three-way comparison (Official/ActiveLook/RunVision-IQ) |
-| 2026-01-21 | SDK 8.4.0 검증: fenix8pro51mm, instinct3solar50mm 미지원 확인 (82개 활성) |
+| 날짜 | 변경 내용 |
+|------|----------|
+| 2026-01-21 | 초기 문서 작성 (Garmin 공식 BLE Central 문서 기반) |
+| 2026-03-15 | 공식 스토어 실제 노출 확인 — 문서와 실제 동작 불일치 발견 |
+| 2026-03-15 | 판단 기준 3가지 확립 (ActiveLook 우선 / SDK 검증 / 출시연도 안전기준) |
+| 2026-03-15 | 전면 재작성: Tier 1/2/3 구조, 77개 활성 (82 → 77, -7 +2) |
+| 2026-03-15 | 제거: fr645m, venu(DataField 미지원 확인), venusqm, vivoactive3m/3mlte/4/4s |
+| 2026-03-15 | 추가: fenix7pronowifi, fenix7xpronowifi (ActiveLook 포함이나 manifest 누락이었음) |

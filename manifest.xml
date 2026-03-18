@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <!-- RunVision-IQ - Garmin Connect IQ DataField -->
-<!-- iLens/rLens AR 글래스 연동 러닝/사이클링 메트릭 디스플레이 -->
-<!-- BLE Central 지원 러닝/피트니스 기기 (82개 활성, 2026-01-21 업데이트) -->
+<!-- iLens/rLens AR 글래스 연동 러닝 메트릭 디스플레이 -->
+<!-- BLE Central 지원 러닝/피트니스 기기 (77개 활성, 2026-03-15 업데이트) -->
+<!-- 호환 기기 기준: Docs/BLE-CENTRAL-COMPATIBILITY.md 참조 -->
 <iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="3">
     <iq:application
         entry="RunVisionIQApp"
@@ -10,7 +11,7 @@
         minApiLevel="3.1.0"
         name="@Strings.AppName"
         type="datafield"
-        version="1.1.5">
+        version="1.1.6">
 
         <iq:products>
             <!-- ========================================================= -->
@@ -47,9 +48,6 @@
             <!-- Forerunner 570 Series (2025 신규) -->
             <iq:product id="fr57042mm"/>
             <iq:product id="fr57047mm"/>
-
-            <!-- Forerunner 645 Music -->
-            <iq:product id="fr645m"/>
 
             <!-- Forerunner 745 -->
             <iq:product id="fr745"/>
@@ -89,6 +87,9 @@
             <iq:product id="fenix7pro"/>
             <iq:product id="fenix7spro"/>
             <iq:product id="fenix7xpro"/>
+            <!-- No-WiFi variants: BLE Central 정상 지원, ActiveLook 검증 완료 -->
+            <iq:product id="fenix7pronowifi"/>
+            <iq:product id="fenix7xpronowifi"/>
 
             <!-- Fenix 8 Series -->
             <iq:product id="fenix843mm"/>
@@ -111,26 +112,20 @@
             <iq:product id="enduro3"/>
 
             <!-- ==================== Venu Series ==================== -->
-            <!-- 라이프스타일/피트니스 - BLE Central 지원 -->
-            <!-- NOTE: Venu Sq (non-music)는 BLE Central 미지원 → 제외 -->
-            <iq:product id="venu"/>
+            <!-- venu(Gen1,2019): DataField 미지원 확인 → 제외 -->
+            <!-- venusqm(2020): Gen1과 동일 세대, ActiveLook 미포함 → 제외 -->
             <iq:product id="venu2"/>
             <iq:product id="venu2s"/>
             <iq:product id="venu2plus"/>
             <iq:product id="venu3"/>
             <iq:product id="venu3s"/>
-            <iq:product id="venusqm"/>
             <iq:product id="venusq2m"/>
             <!-- Venu 4 Series (2024 신규) -->
             <iq:product id="venu441mm"/>
             <iq:product id="venu445mm"/>
 
             <!-- ==================== Vivoactive Series ==================== -->
-            <!-- 피트니스 워치 - BLE Central 지원 -->
-            <iq:product id="vivoactive3m"/>
-            <iq:product id="vivoactive3mlte"/>
-            <iq:product id="vivoactive4"/>
-            <iq:product id="vivoactive4s"/>
+            <!-- vivoactive3m/3mlte(2018), vivoactive4/4s(2019): ActiveLook 미포함 → 제외 -->
             <iq:product id="vivoactive5"/>
             <iq:product id="vivoactive6"/>
 
