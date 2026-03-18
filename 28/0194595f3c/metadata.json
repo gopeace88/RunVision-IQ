@@ -1,0 +1,29 @@
+{
+  "cli_version": "dev",
+  "checkpoint_id": "280194595f3c",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 5,
+  "files_touched": [
+    ".claude/settings.json",
+    "Docs/BLE-CENTRAL-COMPATIBILITY.md",
+    "manifest.xml",
+    "scripts/generate_device_list.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/28/0194595f3c/0/metadata.json",
+      "transcript": "/28/0194595f3c/0/full.jsonl",
+      "context": "/28/0194595f3c/0/context.md",
+      "content_hash": "/28/0194595f3c/0/content_hash.txt",
+      "prompt": "/28/0194595f3c/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 169,
+    "cache_creation_tokens": 347287,
+    "cache_read_tokens": 9932838,
+    "output_tokens": 98773,
+    "api_call_count": 101
+  }
+}

@@ -1,0 +1,669 @@
+runvision-iq 호환기기를 조사하고 있다. 릴리즈시의 정보를 참고해서 정확한 내역을 파악해라.
+
+---
+
+https://apps.garmin.com/apps/742fda81-50eb-4e96-a98d-7325a4776dd0?tid=1  이것이 공식릴리즈 웹페이지인데 다르구나.
+
+---
+
+SDK, BLE 기준으로 러닝 데이터필드가 적용가능한 기기를 다시 산출해봐라.
+
+---
+
+앞으로 BLE-CENTRAL-COMPATIBILITY.md 를 기준으로 생각하면 되나? claude.md 에 정확한 기준문서가 어떤것인지 명시되어있나? 명시하고 그 문서를 수정하라.
+
+---
+
+runvision-iq 를 스토어에 등록할때도 호환리스트를 명시해야한다. 이것의 기준도 명확히해서 앞으로 수정될때 자동으로 호환리스트도 업데이트되도로하라.
+
+---
+
+활성기기가 전부 러닝앱이 있고 러닝 데이터필드 설치가 가능한 것 맞죠?
+
+---
+
+3년전의 venu 는 적용안됨. venu2 는 적용이됨.
+
+---
+
+[Request interrupted by user for tool use]
+
+---
+
+안전하게 21년 이전 출시는 다 삭제해볼까요? 어떤게 해당되나요?
+
+---
+
+그런데 venu 는 ble central 기능이 없는데 왜 리스트에 들어가 있었죠?
+
+---
+
+fr245, fr245m, fr645m, fr745, fr945 도 ble central 이 안되나? 이것은 달리기 전용모델이라서 호환기종이지 않나?
+
+---
+
+1번 ActiveLook 이 runvision-iq 와 똑같은 방식으로 사용하고 있으므로 ActiveLook 에서 지원하는 기기는 호환기기에 넣어도 안전할것이다.
+
+---
+
+네, 확정된것은 지우세요. 기준문서의 내용을 다 지우고 다시 만드세요.
+
+---
+
+[Request interrupted by user]
+
+---
+
+네, 확정된것은 지우세요. 기준문서의 내용을 다 지우고 다시 만드세요. 아래의 기준으로 다시 파악해 보세요.
+1.  ActiveLook manifest는 실제 AR 글래스 제품을 출시해서 사용자들이 검증한 목록임. 이론적 문서 기반이 아닌 실사용 검증 목록이므로 RunVision-IQ의 가장 신뢰할 수 있는 기준점.
+2. 기기의 개발 SDK 버전을 기준으로  BLE central 기능과 러닝 액티브티가 있고 데이터필드를 지원하는 기기가 호환기기 대상임.
+3. ActiveLook manifest 에 있는 기기가 출시된 이전의 오래된 기기는 안전성을 위해서 무조건 제거.
+
+---
+
+호환기기 77개를 보여다오.
+
+---
+
+아래 내용을 검증해다오. 
+시리즈    모델    수
+Forerunner    55, 165, 165 Music, 245, 245 Music, 255, 255 Music, 255S, 255S Music, 265, 265S, 570 (42mm), 570 (47mm), 745, 945, 945 LTE, 955, 965, 970    19
+fēnix® 5 Plus    5 Plus, 5S Plus, 5X Plus    3
+fēnix® 6    6, 6S, 6 Pro, 6S Pro, 6X Pro    5
+fēnix® 7    7, 7S, 7X, 7 Pro, 7S Pro, 7X Pro, 7 Pro (No WiFi), 7X Pro (No WiFi)    8
+fēnix® 8    8 AMOLED (43mm), 8 AMOLED (47mm), 8 Solar (47mm), 8 Solar (51mm), 8 Pro, E    6
+epix™    2, 2 Pro (42mm), 2 Pro (47mm), 2 Pro (51mm)    4
+Enduro™    1, 3    2
+Venu®    2, 2S, 2 Plus, 3, 3S, Sq. 2 Music, 4 (41mm), 4 (45mm)    8
+vívoactive®    5, 6    2
+Instinct®    2, 2S, 2X, 3 AMOLED (45mm), 3 AMOLED (50mm), 3 Solar (45mm), Crossover, Crossover AMOLED, E (40mm), E (45mm)    10
+MARQ®    Gen 2, Aviator (Gen 2), Adventurer, Athlete, Aviator, Captain, Commander, Driver, Expedition, Golfer    10
+합계        77
+
+---
+
+이제 claude.md 부터 수정시 자동 업데이트 스크립터까지 다시 점검해보고 보완해보자.
+
+---
+
+그럼, 가민스토어에서 지금 runvision-iq 를 업그레이드 할까?
+
+---
+
+당신이 wsl 에서 빌드해줬었는데요?
+
+---
+
+[Request interrupted by user for tool use]
+
+---
+
+잠시만요 버전 확인하구요. 1.1.5 가 올라가 있네요. 1.1.6으로 해주세요.
+
+---
+
+네
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Summary:
+1. Primary Request and Intent:
+   - Investigate RunVision-IQ compatible devices based on release information
+   - Verify accuracy of BLE-CENTRAL-COMPATIBILITY.md against actual Garmin store page
+   - Establish clear authoritative reference document for compatible devices
+   - Create auto-update system: manifest.xml → store listing text
+   - Apply 3-criteria device selection standard (ActiveLook/SDK/release year)
+   - Update manifest.xml to 77 devices, build v1.1.6 .iq package for Garmin store upload
+
+2. Key Technical Concepts:
+   - **Garmin Connect IQ BLE Central** (`Toybox.BluetoothLowEnergy`) — required for iLens/rLens AR glasses connection
+   - **SDK product ID vs marketing SKU**: one product ID covers multiple Garmin marketing variants (e.g., `fenix6xpro` → fenix 6X Pro + tactix Delta + quatix 6X + more)
+   - **ActiveLook manifest** — same AR glasses BLE Central pattern, real user-verified device list, used as primary trusted reference
+   - **3-criteria device selection standard**:
+     1. ActiveLook manifest (실사용 검증, 최우선)
+     2. SDK-based: BLE Central + Running activity + DataField support
+     3. Release year: ActiveLook 미포함 기기 + 2019년 이전 출시 → 제거
+   - **Venu Gen 1 confirmed broken**: DataField not supported (real-world confirmed)
+   - **fenix7pronowifi**: "No WiFi" not "No BLE" — WiFi and BLE are separate hardware; BLE Central works fine
+   - **UNC path issue**: WSL native filesystem (`/home/jhkim/...`) not accessible via relative paths in cmd.exe → solved with `pushd` which maps UNC to temp drive letter
+   - **`.iq` package build**: uses `-e` (--package-app) flag; builds for all 134 SDK devices, manifest.xml controls which 77 appear in store
+
+3. Files and Code Sections:
+   - **`runvision-iq/manifest.xml`**
+     - Updated header comment: 82개 → 77개 활성, 2026-03-15
+     - Version: 1.1.5 → 1.1.6
+     - Removed: `fr645m`, `venu`, `venusqm`, `vivoactive3m`, `vivoactive3mlte`, `vivoactive4`, `vivoactive4s`
+     - Added: `fenix7pronowifi`, `fenix7xpronowifi` (in ActiveLook, previously missing)
+     - Key section after edits:
+     ```xml
+     <!-- BLE Central 지원 러닝/피트니스 기기 (77개 활성, 2026-03-15 업데이트) -->
+     <!-- 호환 기기 기준: Docs/BLE-CENTRAL-COMPATIBILITY.md 참조 -->
+     <!-- Fenix 7 Series -->
+     <iq:product id="fenix7pronowifi"/>
+     <iq:product id="fenix7xpronowifi"/>
+     <!-- venu(Gen1,2019): DataField 미지원 확인 → 제외 -->
+     <!-- vivoactive3m/3mlte(2018), vivoactive4/4s(2019): ActiveLook 미포함 → 제외 -->
+     <iq:product id="vivoactive5"/>
+     <iq:product id="vivoactive6"/>
+     ```
+
+   - **`REDACTED.md`** — Completely rewritten
+     - Now the authoritative device compatibility reference document
+     - 3 criteria prominently stated at top
+     - Tier 1 (ActiveLook verified, 61개), Tier 2 (same hardware gen, 3개), Tier 3 (2021+, 13개)
+     - Excluded devices with reasons
+     - Version history updated through 2026-03-15
+
+   - **`runvision-iq/scripts/generate_device_list.py`** — Created (new file)
+     - Parses manifest.xml → maps product IDs → generates EN/KO store text
+     - Updates 3 sections of CONNECT-IQ-STORE-LISTING.md automatically
+     - Key structure:
+     ```python
+     DEVICE_DISPLAY = {
+         "fr55": "55", "fr165": "165", "fr165m": "165 Music",
+         "fr745": "745", "fr945": "945", "fr945lte": "945 LTE",
+         # fr645m REMOVED from mapping
+         "venu2": "2", "venu2s": "2S", # venu/venusqm REMOVED
+         "vivoactive5": "5", "vivoactive6": "6", # 3m/3mlte/4/4s REMOVED
+         "fenix7pronowifi": "7 Pro (No WiFi)",
+         "fenix7xpronowifi": "7X Pro (No WiFi)",
+         ...
+     }
+     SERIES_GROUPS = [
+         ("Forerunner", ["fr55","fr165","fr165m","fr245","fr245m",
+           "fr255","fr255m","fr255s","fr255sm","fr265","fr265s",
+           "fr57042mm","fr57047mm","fr745","fr945","fr945lte",
+           "fr955","fr965","fr970"]),  # fr645m removed
+         ("Venu®", ["venu2","venu2s","venu2plus","venu3","venu3s",
+           "venusq2m","venu441mm","venu445mm"]),  # venu/venusqm removed
+         ("vívoactive®", ["vivoactive5","vivoactive6"]),  # 3m/3mlte/4/4s removed
+         ...
+     ]
+     ```
+     - `--dry-run` flag for preview without file modification
+     - Warns on unmapped product IDs
+
+   - **`Docs/runvision-iq/CONNECT-IQ-STORE-LISTING.md`**
+     - Auto-updated by script: 42 → 77 models (EN + KO sections + Compatible Devices table)
+     - `<!-- AUTO-GENERATED -->` marker added to table section
+
+   - **`.claude/CLAUDE.md`**
+     - Version: 1.1.5 → 1.1.6
+     - 호환 기기: `88/85` → `77개`
+     - 배포일: 2026-03-15 추가
+     - 기준 문서: CONNECT-IQ-STORE-LISTING.md → BLE-CENTRAL-COMPATIBILITY.md
+     - 3 criteria summary added
+     - 4-step update procedure added:
+     ```
+     1. BLE-CENTRAL-COMPATIBILITY.md 수정 (근거 기록)
+     2. manifest.xml에 product ID 추가/제거
+     3. DEVICE_DISPLAY / SERIES_GROUPS에 매핑 추가
+     4. python3 scripts/generate_device_list.py 실행
+     ```
+
+4. Errors and fixes:
+   - **cmd.exe UNC path error**: `ERROR: Provided jungle file doesn't exist: monkey.jungle` — WSL native filesystem path (`\\wsl.localhost\Ubuntu-24.04\...`) can't be set as working directory in cmd.exe
+     - Fix: Used `pushd` which maps UNC path to a temporary Windows drive letter, allowing relative paths to work:
+     ```bash
+     cmd.exe /c "pushd \\\\wsl.localhost\\Ubuntu-24.04\\home\\jhkim\\00.Projects\\00.RunVision\\runvision-iq && monkeyc.bat -o bin\\RunVisionIQ.iq -f monkey.jungle -y developer_key.der -e && popd"
+     ```
+   - **Python SyntaxError on `python` command**: Script uses Korean comments → needed `python3` not `python`
+   - **BLE-CENTRAL-COMPATIBILITY.md inaccuracy**: Document claimed to be based on official Garmin BLE Central docs, but Venu Gen 1 was listed despite not supporting DataField (real-world confirmed by user) → document rebuilt with 3-criteria approach
+
+5. Problem Solving:
+   - **Single Source of Truth chain**: manifest.xml → generate_device_list.py → CONNECT-IQ-STORE-LISTING.md. Adding a device now requires 4 steps with script handling the store text sync automatically
+   - **Device verification approach**: Shifted from "official Garmin docs" (shown to be unreliable) to "ActiveLook manifest as primary reference" + SDK criteria + release year safety floor
+   - **77 final devices**: 82 base - 7 removed (fr645m, venu, venusqm, vivoactive3m/3mlte/4/4s) + 2 added (fenix7pronowifi, fenix7xpronowifi) = 77
+
+6. All user messages:
+   - "runvision-iq 호환기기를 조사하고 있다. 릴리즈시의 정보를 참고해서 정확한 내역을 파악해라."
+   - "https://apps.garmin.com/apps/742fda81-50eb-4e96-a98d-7325a4776dd0?tid=1 이것이 공식릴리즈 웹페이지인데 다르구나."
+   - "BLE-CENTRAL-COMPATIBILITY.md 이 문서가 정확한것이냐?"
+   - "[실제 스토어 페이지 내용 붙여넣기 — 107개 항목 목록]"
+   - "SDK, BLE 기준으로 러닝 데이터필드가 적용가능한 기기를 다시 산출해봐라."
+   - "앞으로 BLE-CENTRAL-COMPATIBILITY.md 를 기준으로 생각하면 되나? claude.md 에 정확한 기준문서가 어떤것인지 명시되어있나? 명시하고 그 문서를 수정하라."
+   - "runvision-iq 를 스토어에 등록할때도 호환리스트를 명시해야한다. 이것의 기준도 명확히해서 앞으로 수정될때 자동으로 호환리스트도 업데이트되도로하라."
+   - "활성기기가 전부 러닝앱이 있고 러닝 데이터필드 설치가 가능한 것 맞죠?"
+   - "3년전의 venu 는 적용안됨. venu2 는 적용이됨."
+   - "fr245, fr245m, fr645m, fr745, fr945 도 ble central 이 안되나? 이것은 달리기 전용모델이라서 호환기종이지 않나?"
+   - "1번 ActiveLook 이 runvision-iq 와 똑같은 방식으로 사용하고 있으므로 ActiveLook 에서 지원하는 기기는 호환기기에 넣어도 안전할것이다."
+   - "네, 확정된것은 지우세요. 기준문서의 내용을 다 지우고 다시 만드세요. 아래의 기준으로 다시 파악해 보세요. [3가지 기준 명시]"
+   - "추가된 fenix 2가지는 다시 확인해 보세요. 이것은 ble 가 아닌 wifi 라서 runvision-iq 에서 지원안했는지 모르겠어요."
+   - "호환기기 77개를 보여다오."
+   - "아래 내용을 검증해다오. [77개 표 붙여넣기]"
+   - "이제 claude.md 부터 수정시 자동 업데이트 스크립터까지 다시 점검해보고 보완해보자."
+   - "그럼, 가민스토어에서 지금 runvision-iq 를 업그레이드 할까?"
+   - "당신이 wsl 에서 빌드해줬었는데요?"
+   - "잠시만요 버전 확인하구요. 1.1.5 가 올라가 있네요. 1.1.6으로 해주세요."
+   - "네"
+   - "기준 문서에 위에서 언급한 판단기준 3가지를 명시해서 앞으로 꼭 참조하세요." (interrupt)
+
+7. Pending Tasks:
+   - Build completion: `.iq` package build in progress (was at ~125/134 devices when summary requested)
+   - After build completes: verify `bin/RunVisionIQ.iq` exists and check file size
+   - Upload to Garmin Connect IQ store at https://apps.garmin.com/developer/upload
+   - Update store description with new 77-device text from CONNECT-IQ-STORE-LISTING.md
+   - Update "What's New" text for v1.1.6
+
+8. Current Work:
+   Building `RunVisionIQ.iq` v1.1.6 for Garmin Connect IQ store submission. The build was triggered with:
+   ```bash
+   cmd.exe /c "pushd \\\\wsl.localhost\\Ubuntu-24.04\\home\\jhkim\\00.Projects\\00.RunVision\\runvision-iq && C:\\Users\\jinhee\\AppData\\Roaming\\Garmin\\ConnectIQ\\Sdks\\connectiq-sdk-win-8.4.0-2025-12-03-5122605dc\\bin\\monkeyc.bat -o bin\\RunVisionIQ.iq -f monkey.jungle -y developer_key.der -e && popd"
+   ```
+   The `-e` flag creates an app package (.iq file) for store submission. Build was at 125/134 devices completed before summary was requested. Output file target: `runvision-iq/bin/RunVisionIQ.iq`
+
+9. Optional Next Step:
+   The build was in progress at 125/134 devices. The immediate next step is to check if the build completed successfully:
+   ```bash
+   tail -5 REDACTED.output
+   ```
+   Then verify `ls -la runvision-iq/bin/RunVisionIQ.iq` to confirm the .iq file was created. If successful, guide the user to upload it to https://apps.garmin.com/developer/upload with the updated store description (77 Models) from CONNECT-IQ-STORE-LISTING.md.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/jhkim/.REDACTED.jsonl
+Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with "I'll continue" or similar. Pick up the last task as if the break never happened.
+
+---
+
+<task-notification>
+<task-id>bjuywv558</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>REDACTED.output</output-file>
+<status>completed</status>
+<summary>Background command "Build .iq store package using pushd to map UNC path to temp drive letter" completed (exit code 0)</summary>
+</task-notification>
+Read the output file to retrieve the result: REDACTED.output
+
+---
+
+아래를 수정해다오. 
+  Stream your running metrics directly to iLens/rLens AR smart glasses in real-time!
+
+  RunVision-IQ is a DataField that sends your Garmin watch metrics to iLens/rLens AR glasses via Bluetooth Low Energy.
+  Keep your eyes on the road while staying informed about your performance.
+
+  [FEATURES]
+
+  •Real-time Metrics Display
+  -Pace (min/km)
+  -Heart Rate (bpm)
+  -Cadence (spm)
+  -Distance (km)
+  -Elapsed Time
+
+  •Automatic Connection
+  -Auto-scan for nearby iLens/rLens glasses
+  -Seamless Bluetooth pairing
+  -Auto-reconnect on signal loss
+  -Improved connection stability (v1.1.5)
+
+  •Simple Interface
+  -Clean status display on watch
+  -Connection indicator
+  -No complex setup required
+
+  [REQUIREMENTS]
+
+  •iLens or rLens AR Smart Glasses (sold separately)
+  •Compatible Garmin watch with BLE Central support
+
+  [HOW TO USE]
+
+  1.Turn on your iLens/rLens smart glasses
+  2.Add RunVision-IQ as a DataField to your running activity
+  3.Start your activity - the watch will automatically connect
+  4.See your metrics displayed on your glasses while running!
+
+  [COMPATIBILITY NOTE]
+
+  Compatible with Garmin devices supporting Connect IQ Bluetooth Low Energy (Central role).
+
+  [SUPPORTED DEVICES - 82 Models]
+
+  Forerunner: 55, 165/165M, 245/245M, 255/255M/255S/255SM, 265/265S, 570(42mm/47mm), 645M, 745, 945/945LTE, 955, 965,
+  970
+  Fenix5: 5Plus/5SPlus/5XPlus
+  Fenix6: 6/6S/6Pro/6SPro/6XPro
+  Fenix7: 7/7S/7X/7Pro/7SPro/7XPro
+  Fenix8: 8AMOLED(43mm/47mm), 8Solar(47mm/51mm), 8Pro47mm, FenixE
+  Epix: 2, 2Pro(42mm/47mm/51mm)
+  Enduro: 1, 3
+  Venu: 1, 2/2S/2Plus, 3/3S, SqMusic, Sq2Music, 4(41mm/45mm)
+  Vivoactive: 3Music/3MusicLTE, 4/4S, 5, 6
+  Instinct: 2/2S/2X, 3AMOLED(45mm/50mm), 3Solar45mm, Crossover, E(40mm/45mm)
+  MARQ: Gen1(all), Gen2, Gen2Aviator
+
+  [ABOUT]
+
+  Developed by RunVisionLabs
+  Website: www.runvision.ai
+  Support: support@runvision.ai
+
+---
+
+당신은 지금 꺼꾸로 고쳤다. 기존의 CONNECT-IQ-STORE-LISTING.md 내용이 우선된다.
+
+---
+
+CONNECT-IQ-STORE-LISTING.md 의 내용으로 고치라니깐요. iLens 용어와 AR glass 용어는 삭제해야합니다. 이것은 AR 기기가 아닙니다.
+
+---
+
+아래도 업데이트 해달라
+
+  Version 1.1.5
+  -Added rLens AR glasses support (in addition to iLens)
+  -Fixed pairing timeout not working before activity start
+  -Improved BLE connection stability
+  -Expanded device compatibility: 82 Garmin models
+
+  Version 1.1.0
+  -User-friendly status messages (No BLE, Scanning, Connecting, etc.)
+  -Expanded device compatibility: 42 Garmin models
+  -SDK updated to 8.4.0
+
+  Version 1.0.0 - Initial Release
+  -Real-time streaming to iLens/rLens smart glasses
+  -Auto-scan and connect via BLE
+  -5 running metrics: Pace, HR, Cadence, Distance, Time
+  -Clean, minimal watch interface
+
+---
+
+CONNECT-IQ-STORE-LISTING.md 를 방금 고친건 아니죠?
+
+---
+
+[Request interrupted by user]
+
+---
+
+아..이제 제대로 된거네요.
+
+---
+
+업데이트된 내용을 확인해 주세요. 
+https://apps.garmin.com/apps/742fda81-50eb-4e96-a98d-7325a4776dd0?tid=1
+
+---
+
+Base directory for this skill: /home/jhkim/.claude/skills/agent-browser
+
+# Browser Automation with agent-browser
+
+## Core Workflow
+
+Every browser automation follows this pattern:
+
+1. **Navigate**: `agent-browser open <url>`
+2. **Snapshot**: `agent-browser snapshot -i` (get element refs like `@e1`, `@e2`)
+3. **Interact**: Use refs to click, fill, select
+4. **Re-snapshot**: After navigation or DOM changes, get fresh refs
+
+```bash
+agent-browser open https://example.com/form
+agent-browser snapshot -i
+# Output: @e1 [input type="email"], @e2 [input type="password"], @e3 [button] "Submit"
+
+agent-browser fill @e1 "user@example.com"
+agent-browser fill @e2 "password123"
+agent-browser click @e3
+agent-browser wait --load networkidle
+agent-browser snapshot -i  # Check result
+```
+
+## Essential Commands
+
+```bash
+# Navigation
+agent-browser open <url>              # Navigate (aliases: goto, navigate)
+agent-browser close                   # Close browser
+
+# Snapshot
+agent-browser snapshot -i             # Interactive elements with refs (recommended)
+agent-browser snapshot -i -C          # Include cursor-interactive elements (divs with onclick, cursor:pointer)
+agent-browser snapshot -s "#selector" # Scope to CSS selector
+
+# Interaction (use @refs from snapshot)
+agent-browser click @e1               # Click element
+agent-browser fill @e2 "text"         # Clear and type text
+agent-browser type @e2 "text"         # Type without clearing
+agent-browser select @e1 "option"     # Select dropdown option
+agent-browser check @e1               # Check checkbox
+agent-browser press Enter             # Press key
+agent-browser scroll down 500         # Scroll page
+
+# Get information
+agent-browser get text @e1            # Get element text
+agent-browser get url                 # Get current URL
+agent-browser get title               # Get page title
+
+# Wait
+agent-browser wait @e1                # Wait for element
+agent-browser wait --load networkidle # Wait for network idle
+agent-browser wait --url "**/page"    # Wait for URL pattern
+agent-browser wait 2000               # Wait milliseconds
+
+# Capture
+agent-browser screenshot              # Screenshot to temp dir
+agent-browser screenshot --full       # Full page screenshot
+agent-browser pdf output.pdf          # Save as PDF
+```
+
+## Common Patterns
+
+### Form Submission
+
+```bash
+agent-browser open https://example.com/signup
+agent-browser snapshot -i
+agent-browser fill @e1 "Jane Doe"
+agent-browser fill @e2 "jane@example.com"
+agent-browser select @e3 "California"
+agent-browser check @e4
+agent-browser click @e5
+agent-browser wait --load networkidle
+```
+
+### Authentication with State Persistence
+
+```bash
+# Login once and save state
+agent-browser open https://app.example.com/login
+agent-browser snapshot -i
+agent-browser fill @e1 "$USERNAME"
+agent-browser fill @e2 "$PASSWORD"
+agent-browser click @e3
+agent-browser wait --url "**/dashboard"
+agent-browser state save auth.json
+
+# Reuse in future sessions
+agent-browser state load auth.json
+agent-browser open https://app.example.com/dashboard
+```
+
+### Session Persistence
+
+```bash
+# Auto-save/restore cookies and localStorage across browser restarts
+agent-browser --session-name myapp open https://app.example.com/login
+# ... login flow ...
+agent-browser close  # State auto-saved to ~/.agent-browser/sessions/
+
+# Next time, state is auto-loaded
+agent-browser --session-name myapp open https://app.example.com/dashboard
+
+# Encrypt state at rest
+export AGENT_BROWSER_ENCRYPTION_KEY=$(openssl rand -hex 32)
+agent-browser --session-name secure open https://app.example.com
+
+# Manage saved states
+agent-browser state list
+agent-browser state show myapp-default.json
+agent-browser state clear myapp
+agent-browser state clean --older-than 7
+```
+
+### Data Extraction
+
+```bash
+agent-browser open https://example.com/products
+agent-browser snapshot -i
+agent-browser get text @e5           # Get specific element text
+agent-browser get text body > page.txt  # Get all page text
+
+# JSON output for parsing
+agent-browser snapshot -i --json
+agent-browser get text @e1 --json
+```
+
+### Parallel Sessions
+
+```bash
+agent-browser --session site1 open https://site-a.com
+agent-browser --session site2 open https://site-b.com
+
+agent-browser --session site1 snapshot -i
+agent-browser --session site2 snapshot -i
+
+agent-browser session list
+```
+
+### Connect to Existing Chrome
+
+```bash
+# Auto-discover running Chrome with remote debugging enabled
+agent-browser --auto-connect open https://example.com
+agent-browser --auto-connect snapshot
+
+# Or with explicit CDP port
+agent-browser --cdp 9222 snapshot
+```
+
+### Visual Browser (Debugging)
+
+```bash
+agent-browser --headed open https://example.com
+agent-browser highlight @e1          # Highlight element
+agent-browser record start demo.webm # Record session
+```
+
+### Local Files (PDFs, HTML)
+
+```bash
+# Open local files with file:// URLs
+agent-browser --allow-file-access open file:///path/to/document.pdf
+agent-browser --allow-file-access open file:///path/to/page.html
+agent-browser screenshot output.png
+```
+
+### iOS Simulator (Mobile Safari)
+
+```bash
+# List available iOS simulators
+agent-browser device list
+
+# Launch Safari on a specific device
+agent-browser -p ios --device "iPhone 16 Pro" open https://example.com
+
+# Same workflow as desktop - snapshot, interact, re-snapshot
+agent-browser -p ios snapshot -i
+agent-browser -p ios tap @e1          # Tap (alias for click)
+agent-browser -p ios fill @e2 "text"
+agent-browser -p ios swipe up         # Mobile-specific gesture
+
+# Take screenshot
+agent-browser -p ios screenshot mobile.png
+
+# Close session (shuts down simulator)
+agent-browser -p ios close
+```
+
+**Requirements:** macOS with Xcode, Appium (`npm install -g appium && appium driver install xcuitest`)
+
+**Real devices:** Works with physical iOS devices if pre-configured. Use `--device "<UDID>"` where UDID is from `xcrun xctrace list devices`.
+
+## Ref Lifecycle (Important)
+
+Refs (`@e1`, `@e2`, etc.) are invalidated when the page changes. Always re-snapshot after:
+
+- Clicking links or buttons that navigate
+- Form submissions
+- Dynamic content loading (dropdowns, modals)
+
+```bash
+agent-browser click @e5              # Navigates to new page
+agent-browser snapshot -i            # MUST re-snapshot
+agent-browser click @e1              # Use new refs
+```
+
+## Semantic Locators (Alternative to Refs)
+
+When refs are unavailable or unreliable, use semantic locators:
+
+```bash
+agent-browser find text "Sign In" click
+agent-browser find label "Email" fill "user@test.com"
+agent-browser find role button click --name "Submit"
+agent-browser find placeholder "Search" type "query"
+agent-browser find testid "submit-btn" click
+```
+
+## JavaScript Evaluation (eval)
+
+Use `eval` to run JavaScript in the browser context. **Shell quoting can corrupt complex expressions** -- use `--stdin` or `-b` to avoid issues.
+
+```bash
+# Simple expressions work with regular quoting
+agent-browser eval 'document.title'
+agent-browser eval 'document.querySelectorAll("img").length'
+
+# Complex JS: use --stdin with heredoc (RECOMMENDED)
+agent-browser eval --stdin <<'EVALEOF'
+JSON.stringify(
+  Array.from(document.querySelectorAll("img"))
+    .filter(i => !i.alt)
+    .map(i => ({ src: i.src.split("/").pop(), width: i.width }))
+)
+EVALEOF
+
+# Alternative: base64 encoding (avoids all shell escaping issues)
+agent-browser eval -b "$(echo -n 'Array.from(document.querySelectorAll("a")).map(a => a.href)' | base64)"
+```
+
+**Why this matters:** When the shell processes your command, inner double quotes, `!` characters (history expansion), backticks, and `$()` can all corrupt the JavaScript before it reaches agent-browser. The `--stdin` and `-b` flags bypass shell interpretation entirely.
+
+**Rules of thumb:**
+- Single-line, no nested quotes -> regular `eval 'expression'` with single quotes is fine
+- Nested quotes, arrow functions, template literals, or multiline -> use `eval --stdin <<'EVALEOF'`
+- Programmatic/generated scripts -> use `eval -b` with base64
+
+## Deep-Dive Documentation
+
+| Reference | When to Use |
+|-----------|-------------|
+| [references/commands.md](references/commands.md) | Full command reference with all options |
+| [references/snapshot-refs.md](references/snapshot-refs.md) | Ref lifecycle, invalidation rules, troubleshooting |
+| [references/session-management.md](references/session-management.md) | Parallel sessions, state persistence, concurrent scraping |
+| [references/authentication.md](references/authentication.md) | Login flows, OAuth, 2FA handling, state reuse |
+| [references/video-recording.md](references/video-recording.md) | Recording workflows for debugging and documentation |
+| [references/proxy-support.md](references/proxy-support.md) | Proxy configuration, geo-testing, rotating proxies |
+
+## Ready-to-Use Templates
+
+| Template | Description |
+|----------|-------------|
+| [templates/form-automation.sh](templates/form-automation.sh) | Form filling with validation |
+| [templates/authenticated-session.sh](templates/authenticated-session.sh) | Login once, reuse state |
+| [templates/capture-workflow.sh](templates/capture-workflow.sh) | Content extraction with screenshots |
+
+```bash
+./templates/form-automation.sh https://example.com/form
+./templates/authenticated-session.sh https://app.example.com/login
+./templates/capture-workflow.sh https://example.com ./output
+```
+
+---
+
+호환기기도 다 잘 표시되고 있는거죠? https://apps.garmin.com/apps/742fda81-50eb-4e96-a98d-7325a4776dd0?tid=1
