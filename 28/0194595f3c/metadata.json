@@ -3,7 +3,7 @@
   "checkpoint_id": "280194595f3c",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 5,
+  "checkpoints_count": 6,
   "files_touched": [
     ".claude/settings.json",
     "Docs/BLE-CENTRAL-COMPATIBILITY.md",
@@ -17,13 +17,20 @@
       "context": "/28/0194595f3c/0/context.md",
       "content_hash": "/28/0194595f3c/0/content_hash.txt",
       "prompt": "/28/0194595f3c/0/prompt.txt"
+    },
+    {
+      "metadata": "/28/0194595f3c/1/metadata.json",
+      "transcript": "/28/0194595f3c/1/full.jsonl",
+      "context": "/28/0194595f3c/1/context.md",
+      "content_hash": "/28/0194595f3c/1/content_hash.txt",
+      "prompt": "/28/0194595f3c/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 169,
-    "cache_creation_tokens": 347287,
-    "cache_read_tokens": 9932838,
-    "output_tokens": 98773,
-    "api_call_count": 101
+    "input_tokens": 285,
+    "cache_creation_tokens": 522164,
+    "cache_read_tokens": 13906937,
+    "output_tokens": 140279,
+    "api_call_count": 167
   }
 }
