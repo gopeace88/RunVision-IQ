@@ -49,3 +49,8 @@ tasks_linux.json
 # Temporary/generated files
 Java/
 *.png
+
+# AI/MCP tool local settings
+.claude/
+.serena/
+.entire/
