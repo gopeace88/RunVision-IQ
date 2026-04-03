@@ -896,10 +896,10 @@ class RunVisionBleDelegate extends BluetoothLowEnergy.BleDelegate {
                     }
                 }
 
-                // "ilens" 또는 "rlens" 포함 시 인식 (case-insensitive, 하위호환)
+                // "rlens" 포함 시 인식 (case-insensitive)
                 // FIX: find()는 못 찾으면 -1 반환 (null 아님!)
                 var lowerStr = rawStr.toLower();
-                if (lowerStr.find("ilens") != -1 || lowerStr.find("rlens") != -1) {
+                if (lowerStr.find("rlens") != -1) {
                     _view.onScanResult(r);
                     return;  // 찾으면 즉시 종료
                 }
