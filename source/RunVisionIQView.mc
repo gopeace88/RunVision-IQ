@@ -73,9 +73,10 @@ class RunVisionIQView extends WatchUi.DataField {
     private var _userWeight as Lang.Float = 70.0;          // 사용자 체중 (kg, 기본값 70kg)
     private var _weightInitialized as Lang.Boolean = false;  // 체중 초기화 플래그
 
-    // Write Queue (Flutter 방식: 1초마다 모든 메트릭 순차 전송)
+    // Write Queue (Flutter 방식: 2초마다 모든 메트릭 순차 전송)
     private var _writeQueue as Lang.Array<Lang.ByteArray> = [] as Lang.Array<Lang.ByteArray>;
     private var _isWriting as Lang.Boolean = false;  // Write 진행 중 플래그
+    private var _computeCount as Lang.Number = 0;    // compute() 호출 횟수 (전송 주기 제어)
 
     // BLE Write 속도 자동 감지
     // - 빠른 기기 (FR165+): WRITE_WITH_RESPONSE (~80ms) → 5개/초 OK
@@ -98,6 +99,11 @@ class RunVisionIQView extends WatchUi.DataField {
     private var _pairingRetryCount as Lang.Number = 0;       // 페어링 재시도 횟수
     private const PAIRING_TIMEOUT_MS = 3000;                 // 3초 타임아웃 (ms)
     private const PAIRING_MAX_RETRIES = 3;                   // 최대 3회 재시도
+
+    // 스캔 타임아웃: 2-retry + 새 기기 등록 모드
+    private var _scanStartTime as Lang.Number = 0;           // 스캔 시작 시간 (ms)
+    private var _savedDeviceScanAttempts as Lang.Number = 0; // 저장된 기기 탐색 시도 횟수
+    private const SCAN_TIMEOUT_MS_IQ = 3000;                 // 스캔 타임아웃 (ms)
 
     //! FR55 호환성: Profile을 lazy 생성 (파일 로드 시 BLE API 호출 방지)
     private function getExerciseProfile() as Lang.Dictionary {
@@ -312,6 +318,48 @@ class RunVisionIQView extends WatchUi.DataField {
                             _pairingStartTime = 0;
                         }
                     }
+                }
+            }
+        }
+
+        // 스캔 타임아웃: 2-retry + 새 기기 등록 모드
+        // 저장된 기기 3s×2 미발견 → savedRLensName 삭제 후 any rLens 스캔 3s×2
+        if ((_scanStatus.equals("SCANNING") || _scanStatus.equals("NEW_DEV")) && _scanStartTime > 0 && !_isConnected) {
+            var scanElapsed = System.getTimer() - _scanStartTime;
+            if (scanElapsed >= SCAN_TIMEOUT_MS_IQ) {
+                try {
+                    _scanStartTime = 0;
+                    _savedDeviceScanAttempts++;
+
+                    var savedDevice = Application.Storage.getValue("savedRLensName");
+
+                    if (savedDevice != null && _savedDeviceScanAttempts >= 2) {
+                        // 저장된 기기 2회 실패 → 새 기기 등록 모드
+                        if (Application.Storage has :deleteValue) {
+                            Application.Storage.deleteValue("savedRLensName");
+                        } else {
+                            Application.Storage.setValue("savedRLensName", null);
+                        }
+                        _savedDeviceScanAttempts = 0;
+                        _scanStartTime = System.getTimer();  // 새 타임아웃 윈도우
+                        addBleLog("NEW_DEV");
+                        _scanStatus = "NEW_DEV";
+                    } else if (savedDevice == null && _savedDeviceScanAttempts >= 2) {
+                        // 새 기기 등록 모드 또는 최초 실행 2회 실패 → 에러
+                        _scanStatus = "SCAN_FAIL";
+                        _savedDeviceScanAttempts = 0;
+                        addBleLog("SCAN_FAIL");
+                    } else {
+                        // 1차 실패 → 재시도 (스캔 계속 유지)
+                        _scanStartTime = System.getTimer();
+                        addBleLog("SCAN_TO:" + _savedDeviceScanAttempts);
+                    }
+
+                    WatchUi.requestUpdate();
+                } catch (ex) {
+                    _scanStartTime = 0;
+                    _savedDeviceScanAttempts = 0;
+                    addBleLog("SCAN_ERR");
                 }
             }
         }
@@ -547,9 +595,10 @@ class RunVisionIQView extends WatchUi.DataField {
         _timeLabel = minutes.format("%d") + ":" + secs.format("%02d");
 
         // ========== iLens 전송: Queue 방식 (Flutter와 동일) ==========
-        // 1초마다 모든 메트릭을 queue에 추가 → 순차 전송
+        // 5초마다 모든 메트릭을 queue에 추가 → 순차 전송
         // iLens는 WRITE_WITH_RESPONSE만 지원 → onCharacteristicWrite() callback에서 다음 패킷 전송
-        if (_isConnected && _exerciseCharacteristic != null) {
+        _computeCount++;
+        if (_isConnected && _exerciseCharacteristic != null && _computeCount % 5 == 0) {
             try {
                 // 1. Write 진행 중이 아닐 때만 queue 초기화
                 if (!_isWriting) {
@@ -674,6 +723,8 @@ class RunVisionIQView extends WatchUi.DataField {
             _charRetryCount = 0;  // Characteristic 검색 카운터 리셋
             _needsReconnect = false;
             _isReconnecting = false;
+            _scanStartTime = 0;           // 스캔 타임아웃 추적 종료
+            _savedDeviceScanAttempts = 0; // 스캔 시도 횟수 리셋
             _scanStatus = "CONNECTED";
             addBleLog("CONN OK");
             // DFLogger.logBle("CONNECTED", "Device connected");
@@ -813,10 +864,36 @@ class RunVisionIQView extends WatchUi.DataField {
         WatchUi.requestUpdate();
     }
 
-    //! Called when iLens device is found during scanning
+    //! Called when rLens device is found during scanning
     function onScanResult(scanResult as BluetoothLowEnergy.ScanResult) as Void {
         addBleLog("FOUND");
         System.println("iLens found, RSSI=" + scanResult.getRssi());
+
+        // Save device name on first connection (device name = serial number)
+        if (Application.Storage.getValue("savedRLensName") == null) {
+            var raw = scanResult.getRawData();
+            if (raw != null) {
+                var rawStr = "";
+                for (var i = 0; i < raw.size(); i++) {
+                    var c = raw[i];
+                    if (c >= 0x20 && c <= 0x7E) { rawStr += c.toChar(); }
+                }
+                // Extract device name: find "rlens" and read until whitespace
+                var lowerStr = rawStr.toLower();
+                var idx = lowerStr.find("rlens");
+                if (idx != -1) {
+                    var nameEnd = idx;
+                    while (nameEnd < rawStr.length()) {
+                        var ch = rawStr.substring(nameEnd, nameEnd + 1);
+                        if (ch.equals(" ")) { break; }
+                        nameEnd++;
+                    }
+                    var deviceName = rawStr.substring(idx, nameEnd);
+                    Application.Storage.setValue("savedRLensName", deviceName);
+                    System.println("Saved rLens device: " + deviceName);
+                }
+            }
+        }
 
         // Auto-connect
         if (!_isConnected && _connectedDevice == null) {
@@ -845,12 +922,15 @@ class RunVisionIQView extends WatchUi.DataField {
         if (scanState == BluetoothLowEnergy.SCAN_STATE_SCANNING) {
             if (status == BluetoothLowEnergy.STATUS_SUCCESS) {
                 _scanStatus = "SCANNING";
+                _scanStartTime = System.getTimer();  // 타임아웃 추적 시작
             } else {
                 _scanStatus = "SCAN_ERR";
+                _scanStartTime = 0;
             }
         } else if (scanState == BluetoothLowEnergy.SCAN_STATE_OFF) {
             // 스캔 중지 = 기기 찾음, 연결 시도 중
             _scanStatus = "Connecting...";
+            _scanStartTime = 0;  // 스캔 종료 — 타임아웃 추적 불필요
         }
 
         WatchUi.requestUpdate();
@@ -880,8 +960,10 @@ class RunVisionBleDelegate extends BluetoothLowEnergy.BleDelegate {
         // System.println("RunVisionBleDelegate initialized");
     }
 
-    //! iLens 기기 식별: raw data 전체에서 "ilens" 검색 (case-insensitive)
+    //! rLens 기기 식별: 이름 전체 매칭 (기기명=시리얼번호, e.g. "rlens-e70b4")
+    //! 저장된 기기명이 있으면 해당 기기만 연결 (다른 사람 기기 연결 방지)
     function onScanResults(results as BluetoothLowEnergy.Iterator) as Void {
+        var savedDevice = Application.Storage.getValue("savedRLensName");
         var r = results.next() as BluetoothLowEnergy.ScanResult;
         while (r != null) {
             var raw = r.getRawData();
@@ -896,12 +978,20 @@ class RunVisionBleDelegate extends BluetoothLowEnergy.BleDelegate {
                     }
                 }
 
-                // "rlens" 포함 시 인식 (case-insensitive)
-                // FIX: find()는 못 찾으면 -1 반환 (null 아님!)
                 var lowerStr = rawStr.toLower();
                 if (lowerStr.find("rlens") != -1) {
-                    _view.onScanResult(r);
-                    return;  // 찾으면 즉시 종료
+                    if (savedDevice != null) {
+                        // 저장된 기기명과 정확히 일치하는 경우만 연결
+                        if (rawStr.find(savedDevice) != -1) {
+                            _view.onScanResult(r);
+                            return;
+                        }
+                        // 불일치: 다른 사람의 rLens, 스킵
+                    } else {
+                        // 최초 실행: 처음 발견된 rLens에 연결
+                        _view.onScanResult(r);
+                        return;
+                    }
                 }
             }
 
