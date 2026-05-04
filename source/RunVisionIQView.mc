@@ -628,13 +628,11 @@ class RunVisionIQView extends WatchUi.DataField {
     //! Draw the data field
     //! @param dc Device context
     function onUpdate(dc as Graphics.Dc) as Void {
-        // Set background color
-        dc.setColor(Graphics.COLOR_TRANSPARENT, Graphics.COLOR_BLACK);
-        dc.clear();
-
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-
         try {
+            dc.setColor(Graphics.COLOR_TRANSPARENT, Graphics.COLOR_BLACK);
+            dc.clear();
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+
             var width = dc.getWidth();
             var height = dc.getHeight();
             var centerX = width / 2;
@@ -649,7 +647,8 @@ class RunVisionIQView extends WatchUi.DataField {
             dc.drawText(centerX, centerY + 10, Graphics.FONT_SMALL, statusText, Graphics.TEXT_JUSTIFY_CENTER);
 
         } catch (ex) {
-            dc.drawText(dc.getWidth() / 2, 50, Graphics.FONT_SMALL, "ERROR", Graphics.TEXT_JUSTIFY_CENTER);
+            // Hardcoded coords — dc.getWidth() can throw if dc is broken
+            try { dc.drawText(120, 50, Graphics.FONT_SMALL, "ERR", Graphics.TEXT_JUSTIFY_CENTER); } catch (ex2) {}
         }
     }
 
@@ -866,55 +865,60 @@ class RunVisionIQView extends WatchUi.DataField {
 
     //! Called when rLens device is found during scanning
     function onScanResult(scanResult as BluetoothLowEnergy.ScanResult) as Void {
-        addBleLog("FOUND");
-        System.println("iLens found, RSSI=" + scanResult.getRssi());
+        try {
+            addBleLog("FOUND");
+            System.println("iLens found, RSSI=" + scanResult.getRssi());
 
-        // Save device name on first connection (device name = serial number)
-        if (Application.Storage.getValue("savedRLensName") == null) {
-            var raw = scanResult.getRawData();
-            if (raw != null) {
-                var rawStr = "";
-                for (var i = 0; i < raw.size(); i++) {
-                    var c = raw[i];
-                    if (c >= 0x20 && c <= 0x7E) { rawStr += c.toChar(); }
-                }
-                // Extract device name: find "rlens" and read until whitespace
-                var lowerStr = rawStr.toLower();
-                var idx = lowerStr.find("rlens");
-                if (idx != -1) {
-                    var nameEnd = idx;
-                    while (nameEnd < rawStr.length()) {
-                        var ch = rawStr.substring(nameEnd, nameEnd + 1);
-                        if (ch.equals(" ")) { break; }
-                        nameEnd++;
+            // Save device name on first connection (device name = serial number)
+            if (Application.Storage.getValue("savedRLensName") == null) {
+                var raw = scanResult.getRawData();
+                if (raw != null) {
+                    var rawStr = "";
+                    for (var i = 0; i < raw.size(); i++) {
+                        var c = raw[i];
+                        if (c >= 0x20 && c <= 0x7E) { rawStr += c.toChar(); }
                     }
-                    var deviceName = rawStr.substring(idx, nameEnd);
-                    Application.Storage.setValue("savedRLensName", deviceName);
-                    System.println("Saved rLens device: " + deviceName);
+                    // Extract device name: find "rlens" and read until whitespace
+                    // NOTE: Monkey C String.find() returns null (not -1) when not found
+                    var lowerStr = rawStr.toLower();
+                    var idx = lowerStr.find("rlens");
+                    if (idx != null) {
+                        var nameEnd = idx;
+                        while (nameEnd < rawStr.length()) {
+                            var ch = rawStr.substring(nameEnd, nameEnd + 1);
+                            if (ch.equals(" ")) { break; }
+                            nameEnd++;
+                        }
+                        var deviceName = rawStr.substring(idx, nameEnd);
+                        Application.Storage.setValue("savedRLensName", deviceName);
+                        System.println("Saved rLens device: " + deviceName);
+                    }
                 }
             }
-        }
 
-        // Auto-connect
-        if (!_isConnected && _connectedDevice == null) {
-            _devicesFound++;
-            _lastScanResult = scanResult;
+            // Auto-connect
+            if (!_isConnected && _connectedDevice == null) {
+                _devicesFound++;
+                _lastScanResult = scanResult;
 
-            BluetoothLowEnergy.setScanState(BluetoothLowEnergy.SCAN_STATE_OFF);
+                BluetoothLowEnergy.setScanState(BluetoothLowEnergy.SCAN_STATE_OFF);
 
-            addBleLog("PAIRING");
-            _pairingStartTime = System.getTimer();  // ✅ 타임아웃 추적 시작
-            _connectedDevice = BluetoothLowEnergy.pairDevice(scanResult);
+                addBleLog("PAIRING");
+                _pairingStartTime = System.getTimer();
+                _connectedDevice = BluetoothLowEnergy.pairDevice(scanResult);
 
-            if (_connectedDevice == null) {
-                _scanStatus = "PAIR_FAIL";
-                _pairingStartTime = 0;  // 실패 시 리셋
-            } else {
-                _scanStatus = "PAIRING";
+                if (_connectedDevice == null) {
+                    _scanStatus = "PAIR_FAIL";
+                    _pairingStartTime = 0;
+                } else {
+                    _scanStatus = "PAIRING";
+                }
             }
-        }
 
-        WatchUi.requestUpdate();
+            WatchUi.requestUpdate();
+        } catch (ex) {
+            addBleLog("SCAN_EX");
+        }
     }
 
     //! Called when scan state changes
@@ -963,39 +967,44 @@ class RunVisionBleDelegate extends BluetoothLowEnergy.BleDelegate {
     //! rLens 기기 식별: 이름 전체 매칭 (기기명=시리얼번호, e.g. "rlens-e70b4")
     //! 저장된 기기명이 있으면 해당 기기만 연결 (다른 사람 기기 연결 방지)
     function onScanResults(results as BluetoothLowEnergy.Iterator) as Void {
-        var savedDevice = Application.Storage.getValue("savedRLensName");
-        var r = results.next() as BluetoothLowEnergy.ScanResult;
-        while (r != null) {
-            var raw = r.getRawData();
+        try {
+            var savedDevice = Application.Storage.getValue("savedRLensName");
+            var r = results.next() as BluetoothLowEnergy.ScanResult;
+            while (r != null) {
+                var raw = r.getRawData();
 
-            if (raw != null) {
-                // Raw data 전체를 소문자 문자열로 변환
-                var rawStr = "";
-                for (var i = 0; i < raw.size(); i++) {
-                    var c = raw[i];
-                    if (c >= 0x20 && c <= 0x7E) {
-                        rawStr += c.toChar();
+                if (raw != null) {
+                    // Raw data 전체를 소문자 문자열로 변환
+                    var rawStr = "";
+                    for (var i = 0; i < raw.size(); i++) {
+                        var c = raw[i];
+                        if (c >= 0x20 && c <= 0x7E) {
+                            rawStr += c.toChar();
+                        }
                     }
-                }
 
-                var lowerStr = rawStr.toLower();
-                if (lowerStr.find("rlens") != -1) {
-                    if (savedDevice != null) {
-                        // 저장된 기기명과 정확히 일치하는 경우만 연결
-                        if (rawStr.find(savedDevice) != -1) {
+                    var lowerStr = rawStr.toLower();
+                    // NOTE: Monkey C String.find() returns null (not -1) when not found
+                    if (lowerStr.find("rlens") != null) {
+                        if (savedDevice != null) {
+                            // 저장된 기기명과 정확히 일치하는 경우만 연결
+                            if (rawStr.find(savedDevice) != null) {
+                                _view.onScanResult(r);
+                                return;
+                            }
+                            // 불일치: 다른 사람의 rLens, 스킵
+                        } else {
+                            // 최초 실행: 처음 발견된 rLens에 연결
                             _view.onScanResult(r);
                             return;
                         }
-                        // 불일치: 다른 사람의 rLens, 스킵
-                    } else {
-                        // 최초 실행: 처음 발견된 rLens에 연결
-                        _view.onScanResult(r);
-                        return;
                     }
                 }
-            }
 
-            r = results.next() as BluetoothLowEnergy.ScanResult;
+                r = results.next() as BluetoothLowEnergy.ScanResult;
+            }
+        } catch (ex) {
+            _view.addBleLog("SCAN_EX");
         }
     }
 
