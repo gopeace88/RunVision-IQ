@@ -142,6 +142,23 @@ DEVICE_DISPLAY = {
     "marqdriver":     "Driver",
     "marqexpedition": "Expedition",
     "marqgolfer":     "Golfer",
+
+    # Descent (다이빙 전용이나 BLE Central 지원, 러닝 모드 있음)
+    "descentmk2":    "Mk2/Mk2i",
+    "descentmk2s":   "Mk2S",
+    "descentmk343mm": "Mk3/Mk3i (43mm)",
+    "descentmk351mm": "Mk3i (51mm)",
+
+    # D2 (항공용이나 Fenix급 멀티스포츠, 러닝 모드 있음)
+    "d2airx10": "Air X10",
+    "d2mach1":  "Mach 1",
+
+    # Approach (골프 전용이나 Watches/Wearables, 러닝 모드 있음)
+    "approachs7042mm": "S70 (42mm)",
+    "approachs7047mm": "S70 (47mm)",
+
+    # Venu X1 (직사각형 디스플레이)
+    "venux1": "X1",
 }
 
 # ─── 시리즈 그룹 정의 (표시 순서) ───────────────────────────────────────────────
@@ -171,7 +188,7 @@ SERIES_GROUPS = [
     ("Venu®",        [
         "venu2", "venu2s", "venu2plus",
         "venu3", "venu3s", "venusq2m",
-        "venu441mm", "venu445mm",
+        "venu441mm", "venu445mm", "venux1",
     ]),
     ("vívoactive®",  ["vivoactive5", "vivoactive6"]),
     ("Instinct®",    [
@@ -187,6 +204,9 @@ SERIES_GROUPS = [
         "marqcaptain", "marqcommander", "marqdriver",
         "marqexpedition", "marqgolfer",
     ]),
+    ("Descent™",     ["descentmk2", "descentmk2s", "descentmk343mm", "descentmk351mm"]),
+    ("D2™",          ["d2airx10", "d2mach1"]),
+    ("Approach®",    ["approachs7042mm", "approachs7047mm"]),
 ]
 
 # ─── manifest.xml 파싱 ──────────────────────────────────────────────────────────

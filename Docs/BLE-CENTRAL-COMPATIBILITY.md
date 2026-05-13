@@ -117,7 +117,7 @@
 
 | Product ID | 상태 |
 |------------|------|
-| fenix8pro51mm | `fenix8pro47mm`이 51mm까지 커버하는지 빌드 테스트 필요 |
+| ~~fenix8pro51mm~~ | SDK에 별도 ID 없음. `fenix8pro47mm`의 공식 displayName이 "47mm / 51mm / MicroLED / quatix® 8 Pro"를 모두 포함 → **이미 지원됨** (2026-05-10 SDK 8.4.0 직접 확인) |
 | instinct3solar50mm | `instinct3solar45mm`이 커버하는지 빌드 테스트 필요 |
 | enduro2 | 2022년 출시, ActiveLook 미포함. Tier 3 추가 검토 가능 |
 

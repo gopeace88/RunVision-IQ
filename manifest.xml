@@ -11,7 +11,7 @@
         minApiLevel="3.1.0"
         name="@Strings.AppName"
         type="datafield"
-        version="1.1.8">
+        version="1.1.10">
 
         <iq:products>
             <!-- ========================================================= -->
@@ -96,8 +96,8 @@
             <iq:product id="fenix847mm"/>
             <iq:product id="fenix8solar47mm"/>
             <iq:product id="fenix8solar51mm"/>
+            <!-- fenix8pro47mm = SDK에서 47mm + 51mm OLED + MicroLED + quatix 8 Pro 모두 커버 -->
             <iq:product id="fenix8pro47mm"/>
-            <!-- <iq:product id="fenix8pro51mm"/> SDK 8.4.0에 없음 (향후 추가 예정) -->
             <iq:product id="fenixe"/>
 
             <!-- ==================== Epix Series ==================== -->
@@ -161,7 +161,27 @@
             <iq:product id="marqexpedition"/>
             <iq:product id="marqgolfer"/>
 
-            <!-- D2/Descent/Edge/Approach 시리즈 제외 (러닝과 무관) -->
+            <!-- ==================== Descent Series ==================== -->
+            <!-- 다이빙 전용이나 BLE Central 지원, Watches/Wearables 분류, 러닝 모드 있음 (2026-05-14) -->
+            <iq:product id="descentmk2"/>
+            <iq:product id="descentmk2s"/>
+            <iq:product id="descentmk343mm"/>
+            <iq:product id="descentmk351mm"/>
+
+            <!-- ==================== D2 Series ==================== -->
+            <!-- 항공용이나 Fenix급 멀티스포츠, 러닝 모드 있음 -->
+            <iq:product id="d2airx10"/>
+            <iq:product id="d2mach1"/>
+
+            <!-- ==================== Approach Series ==================== -->
+            <!-- 골프 전용이나 Watches/Wearables, 러닝/피트니스 모드 있음 -->
+            <iq:product id="approachs7042mm"/>
+            <iq:product id="approachs7047mm"/>
+
+            <!-- ==================== Venu X1 ==================== -->
+            <iq:product id="venux1"/>
+
+            <!-- Edge 시리즈 제외: 핸들바 장착 사이클 컴퓨터, 러닝 모드 없음 -->
             <!-- 상세: Docs/BLE-CENTRAL-COMPATIBILITY.md -->
 
         </iq:products>
