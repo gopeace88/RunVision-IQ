@@ -100,6 +100,10 @@ class RunVisionIQView extends WatchUi.DataField {
     private const PAIRING_TIMEOUT_MS = 3000;                 // 3초 타임아웃 (ms)
     private const PAIRING_MAX_RETRIES = 3;                   // 최대 3회 재시도
 
+    // === 사이클/러닝 모드 분기 (Strategy 패턴) ===
+    private var _strategy as Lang.Object or Null = null;
+    private var _metricValues as MetricValues or Null = null;
+
     // 스캔 타임아웃: 2-retry + 새 기기 등록 모드
     private var _scanStartTime as Lang.Number = 0;           // 스캔 시작 시간 (ms)
     private var _savedDeviceScanAttempts as Lang.Number = 0; // 저장된 기기 탐색 시도 횟수
@@ -145,6 +149,8 @@ class RunVisionIQView extends WatchUi.DataField {
             _scanStatus = "INIT_ERR";
             addBleLog("ERR:init");
         }
+
+        _metricValues = new MetricValues();
     }
 
     //! Check for already paired devices (Passive Connection)
@@ -604,12 +610,26 @@ class RunVisionIQView extends WatchUi.DataField {
                 if (!_isWriting) {
                     _writeQueue = [] as Lang.Array<Lang.ByteArray>;
 
-                    // Queue에 5개 메트릭 추가 (v1.0.2: Sport Time 사용, Power/Current Time 제거)
-                    _writeQueue.add(ILensProtocol.createExerciseTimePacket(_elapsedSeconds));  // ⭐ Sport Time (0x03)
-                    _writeQueue.add(ILensProtocol.createVelocityPacket(paceSeconds));          // Pace
-                    _writeQueue.add(ILensProtocol.createHeartRatePacket(hr));                  // Heart Rate
-                    _writeQueue.add(ILensProtocol.createCadencePacket(cadence));              // Cadence
-                    _writeQueue.add(ILensProtocol.createDistancePacket(distance != null ? distance : 0));  // Distance
+                    // Strategy 초기화 (첫 호출 시 단 한 번)
+                    if (_strategy == null) {
+                        _strategy = detectStrategy(info);
+                    }
+
+                    // MetricValues 채우기 (compute() 내에서 이미 계산된 값들 복사)
+                    _metricValues.elapsedSeconds = _elapsedSeconds;
+                    _metricValues.paceSeconds = paceSeconds;
+                    _metricValues.speedKmh = speedKmh;
+                    _metricValues.hr = (hr != null) ? hr : 0;
+                    _metricValues.cadence = cadence;
+                    _metricValues.distance = (distance != null) ? distance.toNumber() : 0;
+                    _metricValues.altitudeM = (altitude != null) ? altitude.toNumber() : 0;
+                    _metricValues.totalAscent = (info != null && info has :totalAscent && info.totalAscent != null) ? info.totalAscent.toNumber() : 0;
+
+                    // Strategy 가 5개 패킷 생성 (러닝 / 사이클 분기)
+                    var packets = _strategy.buildPackets(_metricValues);
+                    for (var i = 0; i < packets.size(); i++) {
+                        _writeQueue.add(packets[i]);
+                    }
 
                     // DFLogger.log("[TX] pace=" + paceSeconds + " hr=" + hr + " cad=" + cadence + " pwr=" + power);
 
