@@ -77,3 +77,17 @@ function testCadenceNormalization(logger as Logger) as Boolean {
 
     return (normalizedCadence == expectedSpm);
 }
+
+(:test)
+function testMetricValues_DefaultsAreZero(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    logger.debug("MetricValues defaults");
+    return values.elapsedSeconds == 0
+        && values.distance == 0
+        && values.paceSeconds == 0
+        && values.speedKmh == 0
+        && values.hr == 0
+        && values.cadence == 0
+        && values.altitudeM == 0
+        && values.totalAscent == 0;
+}
