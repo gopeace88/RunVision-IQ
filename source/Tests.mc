@@ -150,6 +150,52 @@ function testRunningStrategy_DistanceMeters(logger as Logger) as Boolean {
     return findAndCompare(packets, 0x06, expected, logger);
 }
 
+// === CyclingStrategy basic packet tests ===
+
+(:test)
+function testCyclingStrategy_VelocityIsSpeedKmh(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.speedKmh = 25;
+    var strategy = new CyclingStrategy();
+    var packets = strategy.buildPackets(values);
+    // 0x07, 25 = 0x19 = LE [0x19, 0x00, 0x00, 0x00]
+    var expected = [0x07, 0x19, 0x00, 0x00, 0x00]b;
+    return findAndCompare(packets, 0x07, expected, logger);
+}
+
+(:test)
+function testCyclingStrategy_CadenceIsAltitudeM(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.altitudeM = 1200;
+    var strategy = new CyclingStrategy();
+    var packets = strategy.buildPackets(values);
+    // 0x0E, 1200 = 0x4B0 = LE [0xB0, 0x04, 0x00, 0x00]
+    var expected = [0x0E, 0xB0, 0x04, 0x00, 0x00]b;
+    return findAndCompare(packets, 0x0E, expected, logger);
+}
+
+(:test)
+function testCyclingStrategy_DistanceMeters(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.distance = 5000;
+    var strategy = new CyclingStrategy();
+    var packets = strategy.buildPackets(values);
+    // 0x06, 5000 = 0x1388 = LE [0x88, 0x13, 0x00, 0x00]
+    var expected = [0x06, 0x88, 0x13, 0x00, 0x00]b;
+    return findAndCompare(packets, 0x06, expected, logger);
+}
+
+(:test)
+function testCyclingStrategy_SportTimePacket(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.elapsedSeconds = 1800;  // 30:00
+    var strategy = new CyclingStrategy();
+    var packets = strategy.buildPackets(values);
+    // 0x03, 1800 = 0x708 = LE [0x08, 0x07, 0x00, 0x00]
+    var expected = [0x03, 0x08, 0x07, 0x00, 0x00]b;
+    return findAndCompare(packets, 0x03, expected, logger);
+}
+
 // Helper: 주어진 ID 의 패킷을 찾아 expected 와 바이트 비교
 function findAndCompare(packets as Lang.Array<Lang.ByteArray>,
                        id as Lang.Number,
