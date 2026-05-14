@@ -1,0 +1,26 @@
+{
+  "cli_version": "dev",
+  "checkpoint_id": "b08e48d9e18a",
+  "strategy": "manual-commit",
+  "branch": "feat/cycling-mode",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "source/RunVisionIQView.mc",
+    "source/Tests.mc"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b0/8e48d9e18a/0/metadata.json",
+      "transcript": "/b0/8e48d9e18a/0/full.jsonl",
+      "content_hash": "/b0/8e48d9e18a/0/content_hash.txt",
+      "prompt": "/b0/8e48d9e18a/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1209,
+    "cache_creation_tokens": 2422195,
+    "cache_read_tokens": 83494298,
+    "output_tokens": 357969,
+    "api_call_count": 684
+  }
+}
