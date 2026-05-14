@@ -196,6 +196,95 @@ function testCyclingStrategy_SportTimePacket(logger as Logger) as Boolean {
     return findAndCompare(packets, 0x03, expected, logger);
 }
 
+// === CyclingStrategy HR lock state machine tests ===
+
+(:test)
+function testCyclingStrategy_HrLockBeforeT30_SendsHr(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.elapsedSeconds = 15;
+    values.hr = 160;
+    values.totalAscent = 999;
+    var strategy = new CyclingStrategy();
+    var packets = strategy.buildPackets(values);
+    // 30초 전 → HR 슬롯에 hr 그대로
+    var expected = [0x0B, 0xA0, 0x00, 0x00, 0x00]b;  // 160
+    return findAndCompare(packets, 0x0B, expected, logger);
+}
+
+(:test)
+function testCyclingStrategy_HrLockAt30_WithHr_StaysHr(logger as Logger) as Boolean {
+    var strategy = new CyclingStrategy();
+    var values = new MetricValues();
+
+    // 0~29초 동안 hr 가끔 잡힘
+    values.hr = 155;
+    for (var t = 0; t < 30; t++) {
+        values.elapsedSeconds = t;
+        strategy.buildPackets(values);
+    }
+
+    // 30초 시점 — HR 락 발동
+    values.elapsedSeconds = 30;
+    values.hr = 160;
+    values.totalAscent = 500;
+    var packets = strategy.buildPackets(values);
+
+    // HR 모드 확정 → hr=160 전송
+    var expected = [0x0B, 0xA0, 0x00, 0x00, 0x00]b;
+    return findAndCompare(packets, 0x0B, expected, logger);
+}
+
+(:test)
+function testCyclingStrategy_HrLockAt30_NoHr_SwitchesAscent(logger as Logger) as Boolean {
+    var strategy = new CyclingStrategy();
+    var values = new MetricValues();
+
+    // 0~29초 동안 hr 항상 0 (Edge 시뮬레이션)
+    values.hr = 0;
+    for (var t = 0; t < 30; t++) {
+        values.elapsedSeconds = t;
+        strategy.buildPackets(values);
+    }
+
+    // 30초 시점 — totalAscent 락 발동
+    values.elapsedSeconds = 30;
+    values.hr = 0;
+    values.totalAscent = 850;
+    var packets = strategy.buildPackets(values);
+
+    // totalAscent 모드 확정 → 850 전송
+    var expected = [0x0B, 0x52, 0x03, 0x00, 0x00]b;  // 850 = 0x352
+    return findAndCompare(packets, 0x0B, expected, logger);
+}
+
+(:test)
+function testCyclingStrategy_HrComesBackAfterLockedAscent_StaysAscent(logger as Logger) as Boolean {
+    var strategy = new CyclingStrategy();
+    var values = new MetricValues();
+
+    // 0~29초 hr=0
+    values.hr = 0;
+    for (var t = 0; t < 30; t++) {
+        values.elapsedSeconds = t;
+        strategy.buildPackets(values);
+    }
+
+    // 30초에 락 발동 (totalAscent 모드)
+    values.elapsedSeconds = 30;
+    values.totalAscent = 100;
+    strategy.buildPackets(values);
+
+    // 60초 — HR 늦게 잡혔지만 모드 깜빡임 없음
+    values.elapsedSeconds = 60;
+    values.hr = 150;  // HR 이제 잡힘
+    values.totalAscent = 200;
+    var packets = strategy.buildPackets(values);
+
+    // 여전히 totalAscent 전송 (HR 무시)
+    var expected = [0x0B, 0xC8, 0x00, 0x00, 0x00]b;  // 200
+    return findAndCompare(packets, 0x0B, expected, logger);
+}
+
 // Helper: 주어진 ID 의 패킷을 찾아 expected 와 바이트 비교
 function findAndCompare(packets as Lang.Array<Lang.ByteArray>,
                        id as Lang.Number,
