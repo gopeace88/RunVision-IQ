@@ -621,9 +621,10 @@ class RunVisionIQView extends WatchUi.DataField {
                     _metricValues.speedKmh = speedKmh;
                     _metricValues.hr = (hr != null) ? hr : 0;
                     _metricValues.cadence = cadence;
-                    _metricValues.distance = (distance != null) ? distance.toNumber() : 0;
-                    _metricValues.altitudeM = (altitude != null) ? altitude.toNumber() : 0;
-                    _metricValues.totalAscent = (info != null && info has :totalAscent && info.totalAscent != null) ? info.totalAscent.toNumber() : 0;
+                    // Float → Int 변환은 encodeUINT32() 와 동일하게 반올림 (truncate 시 ~0.5m 편차 발생)
+                    _metricValues.distance = (distance != null) ? roundFloat(distance) : 0;
+                    _metricValues.altitudeM = (altitude != null) ? roundFloat(altitude) : 0;
+                    _metricValues.totalAscent = (info != null && info has :totalAscent && info.totalAscent != null) ? roundFloat(info.totalAscent) : 0;
 
                     // Strategy 가 5개 패킷 생성 (러닝 / 사이클 분기)
                     var packets = _strategy.buildPackets(_metricValues);
@@ -971,6 +972,17 @@ class RunVisionIQView extends WatchUi.DataField {
     function profileRegistrationStart() as Void {}
     function profileRegistrationComplete() as Void {}
     function onBleError(exception as Lang.Exception) as Void {}
+
+    //! Float을 Int로 반올림 (encodeUINT32 와 동일 로직).
+    //! 양수: +0.5 후 truncate. 음수: -0.5 후 truncate.
+    //! 단순 .toNumber()는 truncate이므로 1m 미만 편차 발생 → 회귀 원인.
+    private function roundFloat(value as Lang.Float or Lang.Double) as Lang.Number {
+        if (value >= 0) {
+            return (value + 0.5).toNumber();
+        } else {
+            return (value - 0.5).toNumber();
+        }
+    }
 
 }
 
