@@ -101,7 +101,7 @@ class RunVisionIQView extends WatchUi.DataField {
     private const PAIRING_MAX_RETRIES = 3;                   // 최대 3회 재시도
 
     // === 사이클/러닝 모드 분기 (Strategy 패턴) ===
-    private var _strategy as Lang.Object or Null = null;
+    private var _strategy as MetricStrategy or Null = null;
     private var _metricValues as MetricValues or Null = null;
 
     // 스캔 타임아웃: 2-retry + 새 기기 등록 모드
@@ -976,7 +976,7 @@ class RunVisionIQView extends WatchUi.DataField {
     //! Float을 Int로 반올림 (encodeUINT32 와 동일 로직).
     //! 양수: +0.5 후 truncate. 음수: -0.5 후 truncate.
     //! 단순 .toNumber()는 truncate이므로 1m 미만 편차 발생 → 회귀 원인.
-    private function roundFloat(value as Lang.Float or Lang.Double) as Lang.Number {
+    private function roundFloat(value as Lang.Number or Lang.Float or Lang.Double) as Lang.Number {
         if (value >= 0) {
             return (value + 0.5).toNumber();
         } else {

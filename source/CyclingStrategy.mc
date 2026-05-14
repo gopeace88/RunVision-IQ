@@ -6,7 +6,7 @@ using ILensProtocol;
 //!   0x07: paceSeconds → speedKmh
 //!   0x0E: cadence → altitudeM
 //!   0x0B: hr OR totalAscent (30초 시점에 결정, 이후 영구 고정)
-class CyclingStrategy {
+class CyclingStrategy extends MetricStrategy {
 
     private const HR_LOCK_THRESHOLD_SEC = 30;
 
@@ -15,6 +15,7 @@ class CyclingStrategy {
     private var _useAscent as Lang.Boolean = false;
 
     function initialize() {
+        MetricStrategy.initialize();
     }
 
     function buildPackets(values as MetricValues) as Lang.Array<Lang.ByteArray> {

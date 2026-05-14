@@ -1,6 +1,19 @@
 using Toybox.Lang;
 using Toybox.Activity;
 
+//! Base type for metric strategies (RunningStrategy, CyclingStrategy).
+//! Enables static type checking on _strategy.buildPackets() dispatch.
+//! Subclasses must implement: buildPackets(values as MetricValues) as Array<ByteArray>
+class MetricStrategy {
+    function initialize() {
+    }
+
+    function buildPackets(values as MetricValues) as Lang.Array<Lang.ByteArray> {
+        // Subclasses override. Default returns empty array.
+        return [] as Lang.Array<Lang.ByteArray>;
+    }
+}
+
 //! Per-compute metric values container.
 //! 매 compute() 호출마다 새로 채워지며 strategy 에 전달된다.
 //! 누적 상태(예: HR 30초 락) 는 strategy 가 자체 보유한다.
@@ -21,7 +34,7 @@ class MetricValues {
 //! sport 정수값으로부터 strategy 선택. 테스트 가능한 진입점.
 //! Activity.SPORT_CYCLING → CyclingStrategy
 //! 그 외 (RUNNING/GENERIC/null/unknown) → RunningStrategy (안전한 기본값)
-function detectStrategyForSport(sportValue as Lang.Number or Null) as Lang.Object {
+function detectStrategyForSport(sportValue as Lang.Number or Null) as MetricStrategy {
     if (sportValue != null && sportValue == Activity.SPORT_CYCLING) {
         return new CyclingStrategy();
     }
@@ -29,7 +42,7 @@ function detectStrategyForSport(sportValue as Lang.Number or Null) as Lang.Objec
 }
 
 //! Activity.Info 로부터 strategy 선택. compute() 첫 호출에서 사용.
-function detectStrategy(info as Activity.Info or Null) as Lang.Object {
+function detectStrategy(info as Activity.Info or Null) as MetricStrategy {
     if (info == null) {
         return new RunningStrategy();
     }
