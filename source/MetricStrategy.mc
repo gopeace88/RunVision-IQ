@@ -17,3 +17,23 @@ class MetricValues {
     function initialize() {
     }
 }
+
+//! sport 정수값으로부터 strategy 선택. 테스트 가능한 진입점.
+//! Activity.SPORT_CYCLING → CyclingStrategy
+//! 그 외 (RUNNING/GENERIC/null/unknown) → RunningStrategy (안전한 기본값)
+function detectStrategyForSport(sportValue as Lang.Number or Null) as Lang.Object {
+    if (sportValue != null && sportValue == Activity.SPORT_CYCLING) {
+        return new CyclingStrategy();
+    }
+    return new RunningStrategy();
+}
+
+//! Activity.Info 로부터 strategy 선택. compute() 첫 호출에서 사용.
+function detectStrategy(info as Activity.Info or Null) as Lang.Object {
+    if (info == null) {
+        return new RunningStrategy();
+    }
+    var profile = Activity.getProfileInfo();
+    var sportValue = (profile != null) ? profile.sport : null;
+    return detectStrategyForSport(sportValue);
+}

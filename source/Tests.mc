@@ -1,5 +1,6 @@
 import Toybox.Test;
 import Toybox.Lang;
+using Toybox.Activity;
 
 // RunVision-IQ Unit Tests
 // TDD를 위한 테스트 모듈
@@ -309,4 +310,36 @@ function findAndCompare(packets as Lang.Array<Lang.ByteArray>,
     }
     logger.debug("packet id=" + id + " not found");
     return false;
+}
+
+// === detectStrategy tests ===
+
+// 참고: Activity.Info 가 (:test) 환경에서 sport 필드를 가질 수 없으므로
+// sport 정수값을 직접 받는 헬퍼 detectStrategyForSport(sportValue) 를 테스트한다.
+// detectStrategy(info) 는 이 헬퍼를 호출하는 얇은 래퍼.
+
+(:test)
+function testDetectStrategy_CyclingSport_ReturnsCycling(logger as Logger) as Boolean {
+    var strategy = detectStrategyForSport(Activity.SPORT_CYCLING);
+    return strategy instanceof CyclingStrategy;
+}
+
+(:test)
+function testDetectStrategy_RunningSport_ReturnsRunning(logger as Logger) as Boolean {
+    var strategy = detectStrategyForSport(Activity.SPORT_RUNNING);
+    return strategy instanceof RunningStrategy;
+}
+
+(:test)
+function testDetectStrategy_GenericSport_ReturnsRunning(logger as Logger) as Boolean {
+    // 알 수 없는 sport → 안전한 기본값 RunningStrategy
+    var strategy = detectStrategyForSport(Activity.SPORT_GENERIC);
+    return strategy instanceof RunningStrategy;
+}
+
+(:test)
+function testDetectStrategy_NullSport_ReturnsRunning(logger as Logger) as Boolean {
+    // sport = null (profileInfo 자체가 null 인 경우) → 안전한 기본값
+    var strategy = detectStrategyForSport(null);
+    return strategy instanceof RunningStrategy;
 }
