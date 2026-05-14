@@ -343,3 +343,17 @@ function testDetectStrategy_NullSport_ReturnsRunning(logger as Logger) as Boolea
     var strategy = detectStrategyForSport(null);
     return strategy instanceof RunningStrategy;
 }
+
+// === Transmit interval tests ===
+
+(:test)
+function testRunningStrategy_TransmitInterval_Is5(logger as Logger) as Boolean {
+    var strategy = new RunningStrategy();
+    return strategy.getTransmitIntervalSeconds() == 5;
+}
+
+(:test)
+function testCyclingStrategy_TransmitInterval_Is2(logger as Logger) as Boolean {
+    var strategy = new CyclingStrategy();
+    return strategy.getTransmitIntervalSeconds() == 2;
+}

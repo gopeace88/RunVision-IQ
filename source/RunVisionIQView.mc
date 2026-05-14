@@ -604,7 +604,8 @@ class RunVisionIQView extends WatchUi.DataField {
         // 5초마다 모든 메트릭을 queue에 추가 → 순차 전송
         // iLens는 WRITE_WITH_RESPONSE만 지원 → onCharacteristicWrite() callback에서 다음 패킷 전송
         _computeCount++;
-        if (_isConnected && _exerciseCharacteristic != null && _computeCount % 5 == 0) {
+        var transmitInterval = (_strategy != null) ? _strategy.getTransmitIntervalSeconds() : 5;
+        if (_isConnected && _exerciseCharacteristic != null && _computeCount % transmitInterval == 0) {
             try {
                 // 1. Write 진행 중이 아닐 때만 queue 초기화
                 if (!_isWriting) {

@@ -8,6 +8,12 @@ class MetricStrategy {
     function initialize() {
     }
 
+    //! BLE 전송 주기 (초). 기본 5초, 서브클래스가 오버라이드 가능.
+    //! 사이클 모드는 빠른 속도 변화 → 2초.
+    function getTransmitIntervalSeconds() as Lang.Number {
+        return 5;
+    }
+
     function buildPackets(values as MetricValues) as Lang.Array<Lang.ByteArray> {
         // Subclasses override. Default returns empty array.
         return [] as Lang.Array<Lang.ByteArray>;

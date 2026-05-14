@@ -18,6 +18,12 @@ class CyclingStrategy extends MetricStrategy {
         MetricStrategy.initialize();
     }
 
+    //! 사이클은 빠른 속도 변화 → 2초마다 BLE 전송.
+    //! (러닝: 5초. 25km/h 사이클은 5초에 35m 이동하므로 더 빈번한 갱신이 필요.)
+    function getTransmitIntervalSeconds() as Lang.Number {
+        return 2;
+    }
+
     function buildPackets(values as MetricValues) as Lang.Array<Lang.ByteArray> {
         updateHrLock(values.hr, values.elapsedSeconds);
 
