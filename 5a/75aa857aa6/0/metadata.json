@@ -1,0 +1,39 @@
+{
+  "cli_version": "dev",
+  "checkpoint_id": "5a75aa857aa6",
+  "session_id": "6c466926-191b-47b2-b40d-8c20105542f1",
+  "strategy": "manual-commit",
+  "created_at": "2026-05-14T21:59:15.911988191Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "Docs/superpowers/specs/2026-05-15-cycling-mode-design.md"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "fc27b4552d55",
+  "checkpoint_transcript_start": 1112,
+  "transcript_lines_at_start": 1112,
+  "token_usage": {
+    "input_tokens": 601,
+    "cache_creation_tokens": 988619,
+    "cache_read_tokens": 39570335,
+    "output_tokens": 174320,
+    "api_call_count": 396
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-05-14T21:59:15.801065182Z",
+    "agent_lines": 267,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 267,
+    "total_lines_changed": 267,
+    "agent_percentage": 100,
+    "metric_version": 2
+  }
+}
