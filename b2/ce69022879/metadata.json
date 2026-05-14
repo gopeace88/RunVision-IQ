@@ -1,0 +1,25 @@
+{
+  "cli_version": "dev",
+  "checkpoint_id": "b2ce69022879",
+  "strategy": "manual-commit",
+  "branch": "feat/cycling-mode",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "manifest.xml"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b2/ce69022879/0/metadata.json",
+      "transcript": "/b2/ce69022879/0/full.jsonl",
+      "content_hash": "/b2/ce69022879/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1147,
+    "cache_creation_tokens": 2055970,
+    "cache_read_tokens": 72592492,
+    "output_tokens": 330825,
+    "api_call_count": 652
+  }
+}
