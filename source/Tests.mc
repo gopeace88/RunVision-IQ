@@ -91,3 +91,87 @@ function testMetricValues_DefaultsAreZero(logger as Logger) as Boolean {
         && values.altitudeM == 0
         && values.totalAscent == 0;
 }
+
+// === RunningStrategy regression tests ===
+// 이 테스트들은 기존 러닝 모드 패킷이 한 비트도 안 바뀌었음을 보증한다.
+
+(:test)
+function testRunningStrategy_SportTimePacket(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.elapsedSeconds = 600;  // 10:00
+    var strategy = new RunningStrategy();
+    var packets = strategy.buildPackets(values);
+    // Sport Time = 0x03, 600 = 0x258 = LE [0x58, 0x02, 0x00, 0x00]
+    var expected = [0x03, 0x58, 0x02, 0x00, 0x00]b;
+    return findAndCompare(packets, 0x03, expected, logger);
+}
+
+(:test)
+function testRunningStrategy_VelocityIsPaceSeconds(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.paceSeconds = 330;  // 5:30/km
+    var strategy = new RunningStrategy();
+    var packets = strategy.buildPackets(values);
+    // 0x07, 330 = 0x14A = LE [0x4A, 0x01, 0x00, 0x00]
+    var expected = [0x07, 0x4A, 0x01, 0x00, 0x00]b;
+    return findAndCompare(packets, 0x07, expected, logger);
+}
+
+(:test)
+function testRunningStrategy_HeartRateRaw(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.hr = 150;
+    var strategy = new RunningStrategy();
+    var packets = strategy.buildPackets(values);
+    // 0x0B, 150 = LE [0x96, 0x00, 0x00, 0x00]
+    var expected = [0x0B, 0x96, 0x00, 0x00, 0x00]b;
+    return findAndCompare(packets, 0x0B, expected, logger);
+}
+
+(:test)
+function testRunningStrategy_CadenceIsSpm(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.cadence = 170;
+    var strategy = new RunningStrategy();
+    var packets = strategy.buildPackets(values);
+    // 0x0E, 170 = LE [0xAA, 0x00, 0x00, 0x00]
+    var expected = [0x0E, 0xAA, 0x00, 0x00, 0x00]b;
+    return findAndCompare(packets, 0x0E, expected, logger);
+}
+
+(:test)
+function testRunningStrategy_DistanceMeters(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.distance = 1234;
+    var strategy = new RunningStrategy();
+    var packets = strategy.buildPackets(values);
+    // 0x06, 1234 = 0x4D2 = LE [0xD2, 0x04, 0x00, 0x00]
+    var expected = [0x06, 0xD2, 0x04, 0x00, 0x00]b;
+    return findAndCompare(packets, 0x06, expected, logger);
+}
+
+// Helper: 주어진 ID 의 패킷을 찾아 expected 와 바이트 비교
+function findAndCompare(packets as Lang.Array<Lang.ByteArray>,
+                       id as Lang.Number,
+                       expected as Lang.ByteArray,
+                       logger as Logger) as Lang.Boolean {
+    for (var i = 0; i < packets.size(); i++) {
+        var p = packets[i];
+        if (p.size() > 0 && p[0] == id) {
+            if (p.size() != expected.size()) {
+                logger.debug("packet size mismatch for id=" + id);
+                return false;
+            }
+            for (var j = 0; j < expected.size(); j++) {
+                if (p[j] != expected[j]) {
+                    logger.debug("byte " + j + " mismatch for id=" + id
+                        + " expected=" + expected[j] + " actual=" + p[j]);
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+    logger.debug("packet id=" + id + " not found");
+    return false;
+}
