@@ -1,0 +1,47 @@
+{
+  "cli_version": "dev",
+  "checkpoint_id": "4d73218369f2",
+  "session_id": "6c466926-191b-47b2-b40d-8c20105542f1",
+  "strategy": "manual-commit",
+  "created_at": "2026-05-15T00:41:03.737529576Z",
+  "branch": "feat/cycling-mode",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "source/RunVisionIQView.mc",
+    "source/Tests.mc"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "0a6d1fce60e4",
+  "token_usage": {
+    "input_tokens": 1304,
+    "cache_creation_tokens": 2484273,
+    "cache_read_tokens": 98091484,
+    "output_tokens": 401730,
+    "api_call_count": 721
+  },
+  "session_metrics": {
+    "turn_count": 16
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-05-15T00:41:03.520885478Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 21,
+    "human_modified": 6,
+    "human_removed": 0,
+    "total_committed": 21,
+    "total_lines_changed": 30,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}
