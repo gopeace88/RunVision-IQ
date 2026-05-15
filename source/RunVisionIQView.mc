@@ -100,6 +100,10 @@ class RunVisionIQView extends WatchUi.DataField {
     private const PAIRING_TIMEOUT_MS = 3000;                 // 3초 타임아웃 (ms)
     private const PAIRING_MAX_RETRIES = 3;                   // 최대 3회 재시도
 
+    // === 사이클/러닝 모드 분기 (Strategy 패턴) ===
+    private var _strategy as MetricStrategy or Null = null;
+    private var _metricValues as MetricValues or Null = null;
+
     // 스캔 타임아웃: 2-retry + 새 기기 등록 모드
     private var _scanStartTime as Lang.Number = 0;           // 스캔 시작 시간 (ms)
     private var _savedDeviceScanAttempts as Lang.Number = 0; // 저장된 기기 탐색 시도 횟수
@@ -145,6 +149,8 @@ class RunVisionIQView extends WatchUi.DataField {
             _scanStatus = "INIT_ERR";
             addBleLog("ERR:init");
         }
+
+        _metricValues = new MetricValues();
     }
 
     //! Check for already paired devices (Passive Connection)
@@ -458,13 +464,13 @@ class RunVisionIQView extends WatchUi.DataField {
 
         // Get current speed (m/s -> km/h)
         var speedMs = info != null && info has :currentSpeed ? info.currentSpeed : null;
-        var speedKmh = 0;
+        var speedKmh = 0.0;  // Float — 사이클 모드 0x07 × 60 트릭에서 소수점 정밀도 보존
         var paceSeconds = 0;  // ← Pace를 초 단위로 저장 (iLens 전송용)
         var speedValid = speedMs != null && speedMs > 0;
 
         if (speedValid) {
-            speedKmh = ((speedMs * 3.6) + 0.5).toNumber();  // ✅ 반올림
-            _speedLabel = speedKmh.format("%d");
+            speedKmh = speedMs * 3.6;  // Float 유지 (사이클 precision)
+            _speedLabel = ((speedKmh + 0.5).toNumber()).format("%d");  // 표시는 정수 km/h
 
             // Calculate pace (min/km) - 러너들은 Pace에 익숙
             var paceMinPerKm = 60.0 / (speedMs * 3.6);
@@ -598,18 +604,34 @@ class RunVisionIQView extends WatchUi.DataField {
         // 5초마다 모든 메트릭을 queue에 추가 → 순차 전송
         // iLens는 WRITE_WITH_RESPONSE만 지원 → onCharacteristicWrite() callback에서 다음 패킷 전송
         _computeCount++;
-        if (_isConnected && _exerciseCharacteristic != null && _computeCount % 5 == 0) {
+        var transmitInterval = (_strategy != null) ? _strategy.getTransmitIntervalSeconds() : 5;
+        if (_isConnected && _exerciseCharacteristic != null && _computeCount % transmitInterval == 0) {
             try {
                 // 1. Write 진행 중이 아닐 때만 queue 초기화
                 if (!_isWriting) {
                     _writeQueue = [] as Lang.Array<Lang.ByteArray>;
 
-                    // Queue에 5개 메트릭 추가 (v1.0.2: Sport Time 사용, Power/Current Time 제거)
-                    _writeQueue.add(ILensProtocol.createExerciseTimePacket(_elapsedSeconds));  // ⭐ Sport Time (0x03)
-                    _writeQueue.add(ILensProtocol.createVelocityPacket(paceSeconds));          // Pace
-                    _writeQueue.add(ILensProtocol.createHeartRatePacket(hr));                  // Heart Rate
-                    _writeQueue.add(ILensProtocol.createCadencePacket(cadence));              // Cadence
-                    _writeQueue.add(ILensProtocol.createDistancePacket(distance != null ? distance : 0));  // Distance
+                    // Strategy 초기화 (첫 호출 시 단 한 번)
+                    if (_strategy == null) {
+                        _strategy = detectStrategy(info);
+                    }
+
+                    // MetricValues 채우기 (compute() 내에서 이미 계산된 값들 복사)
+                    _metricValues.elapsedSeconds = _elapsedSeconds;
+                    _metricValues.paceSeconds = paceSeconds;
+                    _metricValues.speedKmh = speedKmh;
+                    _metricValues.hr = (hr != null) ? hr : 0;
+                    _metricValues.cadence = cadence;
+                    // Float → Int 변환은 encodeUINT32() 와 동일하게 반올림 (truncate 시 ~0.5m 편차 발생)
+                    _metricValues.distance = (distance != null) ? roundFloat(distance) : 0;
+                    _metricValues.altitudeM = (altitude != null) ? roundFloat(altitude) : 0;
+                    _metricValues.totalAscent = (info != null && info has :totalAscent && info.totalAscent != null) ? roundFloat(info.totalAscent) : 0;
+
+                    // Strategy 가 5개 패킷 생성 (러닝 / 사이클 분기)
+                    var packets = _strategy.buildPackets(_metricValues);
+                    for (var i = 0; i < packets.size(); i++) {
+                        _writeQueue.add(packets[i]);
+                    }
 
                     // DFLogger.log("[TX] pace=" + paceSeconds + " hr=" + hr + " cad=" + cadence + " pwr=" + power);
 
@@ -951,6 +973,17 @@ class RunVisionIQView extends WatchUi.DataField {
     function profileRegistrationStart() as Void {}
     function profileRegistrationComplete() as Void {}
     function onBleError(exception as Lang.Exception) as Void {}
+
+    //! Float을 Int로 반올림 (encodeUINT32 와 동일 로직).
+    //! 양수: +0.5 후 truncate. 음수: -0.5 후 truncate.
+    //! 단순 .toNumber()는 truncate이므로 1m 미만 편차 발생 → 회귀 원인.
+    private function roundFloat(value as Lang.Number or Lang.Float or Lang.Double) as Lang.Number {
+        if (value >= 0) {
+            return (value + 0.5).toNumber();
+        } else {
+            return (value - 0.5).toNumber();
+        }
+    }
 
 }
 
