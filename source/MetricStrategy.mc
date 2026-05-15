@@ -27,7 +27,7 @@ class MetricValues {
     public var elapsedSeconds as Lang.Number = 0;
     public var distance as Lang.Number = 0;        // meters
     public var paceSeconds as Lang.Number = 0;     // running only (sec/km)
-    public var speedKmh as Lang.Number = 0;        // cycling only (km/h)
+    public var speedKmh as Lang.Float = 0.0;       // cycling only (km/h, Float for decimal precision)
     public var hr as Lang.Number = 0;              // 0 if unavailable
     public var cadence as Lang.Number = 0;         // running only (spm)
     public var altitudeM as Lang.Number = 0;       // cycling only (meters)

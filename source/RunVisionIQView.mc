@@ -464,13 +464,13 @@ class RunVisionIQView extends WatchUi.DataField {
 
         // Get current speed (m/s -> km/h)
         var speedMs = info != null && info has :currentSpeed ? info.currentSpeed : null;
-        var speedKmh = 0;
+        var speedKmh = 0.0;  // Float — 사이클 모드 0x07 × 60 트릭에서 소수점 정밀도 보존
         var paceSeconds = 0;  // ← Pace를 초 단위로 저장 (iLens 전송용)
         var speedValid = speedMs != null && speedMs > 0;
 
         if (speedValid) {
-            speedKmh = ((speedMs * 3.6) + 0.5).toNumber();  // ✅ 반올림
-            _speedLabel = speedKmh.format("%d");
+            speedKmh = speedMs * 3.6;  // Float 유지 (사이클 precision)
+            _speedLabel = ((speedKmh + 0.5).toNumber()).format("%d");  // 표시는 정수 km/h
 
             // Calculate pace (min/km) - 러너들은 Pace에 익숙
             var paceMinPerKm = 60.0 / (speedMs * 3.6);

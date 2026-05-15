@@ -156,11 +156,24 @@ function testRunningStrategy_DistanceMeters(logger as Logger) as Boolean {
 (:test)
 function testCyclingStrategy_VelocityIsSpeedKmh(logger as Logger) as Boolean {
     var values = new MetricValues();
-    values.speedKmh = 25;
+    values.speedKmh = 25.0;
     var strategy = new CyclingStrategy();
     var packets = strategy.buildPackets(values);
-    // 0x07, 25 = 0x19 = LE [0x19, 0x00, 0x00, 0x00]
-    var expected = [0x07, 0x19, 0x00, 0x00, 0x00]b;
+    // 0x07, 25 × 60 = 1500 = 0x5DC = LE [0xDC, 0x05, 0x00, 0x00]
+    // rLens가 ÷60 후 "25" 표시.
+    var expected = [0x07, 0xDC, 0x05, 0x00, 0x00]b;
+    return findAndCompare(packets, 0x07, expected, logger);
+}
+
+(:test)
+function testCyclingStrategy_VelocityPreservesDecimal(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.speedKmh = 25.55;
+    var strategy = new CyclingStrategy();
+    var packets = strategy.buildPackets(values);
+    // 25.55 × 60 = 1533 (반올림) = 0x5FD = LE [0xFD, 0x05, 0x00, 0x00]
+    // rLens가 ÷60 후 25.55 표시 → 소수점 보존 확인.
+    var expected = [0x07, 0xFD, 0x05, 0x00, 0x00]b;
     return findAndCompare(packets, 0x07, expected, logger);
 }
 

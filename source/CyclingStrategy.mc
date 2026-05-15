@@ -3,7 +3,7 @@ using ILensProtocol;
 
 //! Cycling mode metric strategy.
 //! 슬롯 매핑:
-//!   0x07: paceSeconds → speedKmh
+//!   0x07: paceSeconds → speedKmh × 60 (rLens 가 ÷60 해서 표시 → 원래 km/h 복원, 소수점 보존)
 //!   0x0E: cadence → altitudeM
 //!   0x0B: hr OR totalAscent (30초 시점에 결정, 이후 영구 고정)
 class CyclingStrategy extends MetricStrategy {
@@ -29,9 +29,14 @@ class CyclingStrategy extends MetricStrategy {
 
         var hrSlotValue = _useAscent ? values.totalAscent : values.hr;
 
+        // rLens 0x07 슬롯은 값을 60으로 나눠 표시 (페이스 sec→min 변환용).
+        // speedKmh × 60 보내면 rLens 가 ÷60 해도 원래 km/h 표시. 소수점도 보존됨.
+        // 예: 25.55 km/h × 60 = 1533 → 1533/60 = 25.55 표시.
+        var velocityScaled = (values.speedKmh * 60 + 0.5).toNumber();
+
         var packets = [] as Lang.Array<Lang.ByteArray>;
         packets.add(ILensProtocol.createExerciseTimePacket(values.elapsedSeconds));
-        packets.add(ILensProtocol.createVelocityPacket(values.speedKmh));
+        packets.add(ILensProtocol.createVelocityPacket(velocityScaled));
         packets.add(ILensProtocol.createHeartRatePacket(hrSlotValue));
         packets.add(ILensProtocol.createCadencePacket(values.altitudeM));
         packets.add(ILensProtocol.createDistancePacket(values.distance));
