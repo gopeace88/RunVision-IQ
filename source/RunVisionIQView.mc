@@ -444,8 +444,8 @@ class RunVisionIQView extends WatchUi.DataField {
                 _scanStatus = "READY";
             } catch (ex) {
                 _charRetryCount++;
-                if (_charRetryCount >= 5) {
-                    // 5회 실패 → 재연결 트리거
+                if (_charRetryCount >= 10) {
+                    // 10회 실패 → 재연결 트리거 (5초 임계값은 정상 RF 환경에서도 false-positive 유발)
                     _charRetryCount = 0;
                     _isConnected = false;
                     _connectedDevice = null;
@@ -626,6 +626,15 @@ class RunVisionIQView extends WatchUi.DataField {
                     _metricValues.distance = (distance != null) ? roundFloat(distance) : 0;
                     _metricValues.altitudeM = (altitude != null) ? roundFloat(altitude) : 0;
                     _metricValues.totalAscent = (info != null && info has :totalAscent && info.totalAscent != null) ? roundFloat(info.totalAscent) : 0;
+
+                    // *Valid 플래그: stale 0 패킷을 iLens 로 보내지 않기 위한 packet-level skip 신호.
+                    // Strategy.buildPackets() 가 false 인 메트릭의 패킷을 생성 안 함 → iLens 직전값 유지.
+                    _metricValues.speedValid = speedValid;
+                    _metricValues.hrValid = hrValid;
+                    _metricValues.cadenceValid = cadenceValid;
+                    _metricValues.distanceValid = distanceValid;
+                    _metricValues.altitudeValid = (altitude != null);
+                    _metricValues.totalAscentValid = (info != null && info has :totalAscent && info.totalAscent != null);
 
                     // Strategy 가 5개 패킷 생성 (러닝 / 사이클 분기)
                     var packets = _strategy.buildPackets(_metricValues);

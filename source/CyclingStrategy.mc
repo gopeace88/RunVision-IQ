@@ -27,19 +27,36 @@ class CyclingStrategy extends MetricStrategy {
     function buildPackets(values as MetricValues) as Lang.Array<Lang.ByteArray> {
         updateHrLock(values.hr, values.elapsedSeconds);
 
-        var hrSlotValue = _useAscent ? values.totalAscent : values.hr;
-
-        // rLens 0x07 슬롯은 값을 60으로 나눠 표시 (페이스 sec→min 변환용).
-        // speedKmh × 60 보내면 rLens 가 ÷60 해도 원래 km/h 표시. 소수점도 보존됨.
-        // 예: 25.55 km/h × 60 = 1533 → 1533/60 = 25.55 표시.
-        var velocityScaled = (values.speedKmh * 60 + 0.5).toNumber();
-
         var packets = [] as Lang.Array<Lang.ByteArray>;
         packets.add(ILensProtocol.createExerciseTimePacket(values.elapsedSeconds));
-        packets.add(ILensProtocol.createVelocityPacket(velocityScaled));
-        packets.add(ILensProtocol.createHeartRatePacket(hrSlotValue));
-        packets.add(ILensProtocol.createCadencePacket(values.altitudeM));
-        packets.add(ILensProtocol.createDistancePacket(values.distance));
+
+        if (values.speedValid) {
+            // rLens 0x07 슬롯은 값을 60으로 나눠 표시 (페이스 sec→min 변환용).
+            // speedKmh × 60 보내면 rLens 가 ÷60 해도 원래 km/h 표시. 소수점도 보존됨.
+            // 예: 25.55 km/h × 60 = 1533 → 1533/60 = 25.55 표시.
+            var velocityScaled = (values.speedKmh * 60 + 0.5).toNumber();
+            packets.add(ILensProtocol.createVelocityPacket(velocityScaled));
+        }
+
+        // HR 슬롯: 락 결과에 따라 hr 또는 totalAscent. 해당 메트릭이 valid 일 때만 전송.
+        if (_useAscent) {
+            if (values.totalAscentValid) {
+                packets.add(ILensProtocol.createHeartRatePacket(values.totalAscent));
+            }
+        } else {
+            if (values.hrValid) {
+                packets.add(ILensProtocol.createHeartRatePacket(values.hr));
+            }
+        }
+
+        // Cadence 슬롯 = altitudeM (사이클 모드 슬롯 재매핑)
+        if (values.altitudeValid) {
+            packets.add(ILensProtocol.createCadencePacket(values.altitudeM));
+        }
+
+        if (values.distanceValid) {
+            packets.add(ILensProtocol.createDistancePacket(values.distance));
+        }
         return packets;
     }
 

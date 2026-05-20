@@ -99,6 +99,7 @@ function testMetricValues_DefaultsAreZero(logger as Logger) as Boolean {
 (:test)
 function testRunningStrategy_SportTimePacket(logger as Logger) as Boolean {
     var values = new MetricValues();
+    values.setAllValid();
     values.elapsedSeconds = 600;  // 10:00
     var strategy = new RunningStrategy();
     var packets = strategy.buildPackets(values);
@@ -110,6 +111,7 @@ function testRunningStrategy_SportTimePacket(logger as Logger) as Boolean {
 (:test)
 function testRunningStrategy_VelocityIsPaceSeconds(logger as Logger) as Boolean {
     var values = new MetricValues();
+    values.setAllValid();
     values.paceSeconds = 330;  // 5:30/km
     var strategy = new RunningStrategy();
     var packets = strategy.buildPackets(values);
@@ -121,6 +123,7 @@ function testRunningStrategy_VelocityIsPaceSeconds(logger as Logger) as Boolean 
 (:test)
 function testRunningStrategy_HeartRateRaw(logger as Logger) as Boolean {
     var values = new MetricValues();
+    values.setAllValid();
     values.hr = 150;
     var strategy = new RunningStrategy();
     var packets = strategy.buildPackets(values);
@@ -132,6 +135,7 @@ function testRunningStrategy_HeartRateRaw(logger as Logger) as Boolean {
 (:test)
 function testRunningStrategy_CadenceIsSpm(logger as Logger) as Boolean {
     var values = new MetricValues();
+    values.setAllValid();
     values.cadence = 170;
     var strategy = new RunningStrategy();
     var packets = strategy.buildPackets(values);
@@ -143,6 +147,7 @@ function testRunningStrategy_CadenceIsSpm(logger as Logger) as Boolean {
 (:test)
 function testRunningStrategy_DistanceMeters(logger as Logger) as Boolean {
     var values = new MetricValues();
+    values.setAllValid();
     values.distance = 1234;
     var strategy = new RunningStrategy();
     var packets = strategy.buildPackets(values);
@@ -156,6 +161,7 @@ function testRunningStrategy_DistanceMeters(logger as Logger) as Boolean {
 (:test)
 function testCyclingStrategy_VelocityIsSpeedKmh(logger as Logger) as Boolean {
     var values = new MetricValues();
+    values.setAllValid();
     values.speedKmh = 25.0;
     var strategy = new CyclingStrategy();
     var packets = strategy.buildPackets(values);
@@ -168,6 +174,7 @@ function testCyclingStrategy_VelocityIsSpeedKmh(logger as Logger) as Boolean {
 (:test)
 function testCyclingStrategy_VelocityPreservesDecimal(logger as Logger) as Boolean {
     var values = new MetricValues();
+    values.setAllValid();
     values.speedKmh = 25.55;
     var strategy = new CyclingStrategy();
     var packets = strategy.buildPackets(values);
@@ -180,6 +187,7 @@ function testCyclingStrategy_VelocityPreservesDecimal(logger as Logger) as Boole
 (:test)
 function testCyclingStrategy_CadenceIsAltitudeM(logger as Logger) as Boolean {
     var values = new MetricValues();
+    values.setAllValid();
     values.altitudeM = 1200;
     var strategy = new CyclingStrategy();
     var packets = strategy.buildPackets(values);
@@ -191,6 +199,7 @@ function testCyclingStrategy_CadenceIsAltitudeM(logger as Logger) as Boolean {
 (:test)
 function testCyclingStrategy_DistanceMeters(logger as Logger) as Boolean {
     var values = new MetricValues();
+    values.setAllValid();
     values.distance = 5000;
     var strategy = new CyclingStrategy();
     var packets = strategy.buildPackets(values);
@@ -202,6 +211,7 @@ function testCyclingStrategy_DistanceMeters(logger as Logger) as Boolean {
 (:test)
 function testCyclingStrategy_SportTimePacket(logger as Logger) as Boolean {
     var values = new MetricValues();
+    values.setAllValid();
     values.elapsedSeconds = 1800;  // 30:00
     var strategy = new CyclingStrategy();
     var packets = strategy.buildPackets(values);
@@ -215,6 +225,7 @@ function testCyclingStrategy_SportTimePacket(logger as Logger) as Boolean {
 (:test)
 function testCyclingStrategy_HrLockBeforeT30_SendsHr(logger as Logger) as Boolean {
     var values = new MetricValues();
+    values.setAllValid();
     values.elapsedSeconds = 15;
     values.hr = 160;
     values.totalAscent = 999;
@@ -229,6 +240,7 @@ function testCyclingStrategy_HrLockBeforeT30_SendsHr(logger as Logger) as Boolea
 function testCyclingStrategy_HrLockAt30_WithHr_StaysHr(logger as Logger) as Boolean {
     var strategy = new CyclingStrategy();
     var values = new MetricValues();
+    values.setAllValid();
 
     // 0~29초 동안 hr 가끔 잡힘
     values.hr = 155;
@@ -252,6 +264,8 @@ function testCyclingStrategy_HrLockAt30_WithHr_StaysHr(logger as Logger) as Bool
 function testCyclingStrategy_HrLockAt30_NoHr_SwitchesAscent(logger as Logger) as Boolean {
     var strategy = new CyclingStrategy();
     var values = new MetricValues();
+    values.setAllValid();
+    values.hrValid = false;  // 시나리오: HR 스트랩 없음
 
     // 0~29초 동안 hr 항상 0 (Edge 시뮬레이션)
     values.hr = 0;
@@ -275,6 +289,8 @@ function testCyclingStrategy_HrLockAt30_NoHr_SwitchesAscent(logger as Logger) as
 function testCyclingStrategy_HrComesBackAfterLockedAscent_StaysAscent(logger as Logger) as Boolean {
     var strategy = new CyclingStrategy();
     var values = new MetricValues();
+    values.setAllValid();
+    values.hrValid = false;  // 초기 30초간 HR 없음
 
     // 0~29초 hr=0
     values.hr = 0;
@@ -291,6 +307,7 @@ function testCyclingStrategy_HrComesBackAfterLockedAscent_StaysAscent(logger as 
     // 60초 — HR 늦게 잡혔지만 모드 깜빡임 없음
     values.elapsedSeconds = 60;
     values.hr = 150;  // HR 이제 잡힘
+    values.hrValid = true;
     values.totalAscent = 200;
     var packets = strategy.buildPackets(values);
 
@@ -369,4 +386,150 @@ function testRunningStrategy_TransmitInterval_Is5(logger as Logger) as Boolean {
 function testCyclingStrategy_TransmitInterval_Is2(logger as Logger) as Boolean {
     var strategy = new CyclingStrategy();
     return strategy.getTransmitIntervalSeconds() == 2;
+}
+
+// === Packet-level skip tests (결함 A 수정: stale 0 패킷을 iLens 로 안 보냄) ===
+// 활동 미시작 / GPS 미수신 / 센서 dropout 시 invalid 메트릭 패킷을 생성하지 않아
+// iLens 가 직전 유효값을 유지하도록 한다.
+
+(:test)
+function testMetricValues_DefaultsAreInvalid(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    logger.debug("MetricValues *Valid defaults");
+    return !values.speedValid
+        && !values.hrValid
+        && !values.cadenceValid
+        && !values.distanceValid
+        && !values.altitudeValid
+        && !values.totalAscentValid;
+}
+
+(:test)
+function testMetricValues_SetAllValid_TogglesEverythingTrue(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.setAllValid();
+    return values.speedValid
+        && values.hrValid
+        && values.cadenceValid
+        && values.distanceValid
+        && values.altitudeValid
+        && values.totalAscentValid;
+}
+
+(:test)
+function testRunningStrategy_AllInvalid_OnlyTimerPacket(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.elapsedSeconds = 100;
+    // 모든 *Valid = false (기본값)
+    var strategy = new RunningStrategy();
+    var packets = strategy.buildPackets(values);
+    logger.debug("Packet count when all invalid: " + packets.size());
+    // timer 1개만 (garmin timer 는 항상 정확)
+    return packets.size() == 1 && packets[0][0] == 0x03;
+}
+
+(:test)
+function testRunningStrategy_OnlyHrValid_TimerAndHrOnly(logger as Logger) as Boolean {
+    // 시나리오: 활동 중 GPS 미수신, HR 스트랩만 작동
+    var values = new MetricValues();
+    values.elapsedSeconds = 100;
+    values.hr = 150;
+    values.hrValid = true;
+    // speed/cadence/distance 모두 invalid
+    var strategy = new RunningStrategy();
+    var packets = strategy.buildPackets(values);
+    logger.debug("Packet count when only HR valid: " + packets.size());
+    return packets.size() == 2;
+}
+
+(:test)
+function testRunningStrategy_AllValid_FivePackets(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.setAllValid();
+    values.elapsedSeconds = 100;
+    values.paceSeconds = 300;
+    values.hr = 150;
+    values.cadence = 180;
+    values.distance = 1000;
+    var strategy = new RunningStrategy();
+    var packets = strategy.buildPackets(values);
+    logger.debug("Packet count when all valid: " + packets.size());
+    return packets.size() == 5;
+}
+
+(:test)
+function testCyclingStrategy_AllInvalid_OnlyTimerPacket(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.elapsedSeconds = 100;
+    var strategy = new CyclingStrategy();
+    var packets = strategy.buildPackets(values);
+    logger.debug("Cycling all-invalid packet count: " + packets.size());
+    return packets.size() == 1 && packets[0][0] == 0x03;
+}
+
+(:test)
+function testCyclingStrategy_HrModeButHrInvalid_NoHrSlotPacket(logger as Logger) as Boolean {
+    // 시나리오: HR 모드 락 후 센서 dropout → HR slot 패킷 안 보냄
+    var strategy = new CyclingStrategy();
+    var values = new MetricValues();
+    values.setAllValid();
+
+    // 0~29초 hr 잡힘 → HR 모드 락
+    values.hr = 150;
+    for (var t = 0; t < 30; t++) {
+        values.elapsedSeconds = t;
+        strategy.buildPackets(values);
+    }
+    // 락 발동
+    values.elapsedSeconds = 30;
+    strategy.buildPackets(values);
+
+    // 60초 — HR 센서 dropout
+    values.elapsedSeconds = 60;
+    values.hr = 0;
+    values.hrValid = false;
+    var packets = strategy.buildPackets(values);
+
+    // HR slot (0x0B) 패킷이 없어야 함
+    for (var i = 0; i < packets.size(); i++) {
+        if (packets[i][0] == 0x0B) {
+            logger.debug("HR slot packet leaked when hrValid=false");
+            return false;
+        }
+    }
+    return true;
+}
+
+(:test)
+function testCyclingStrategy_AscentModeButAscentInvalid_NoHrSlotPacket(logger as Logger) as Boolean {
+    // 시나리오: Ascent 모드 락 후 totalAscent invalid → HR slot 패킷 안 보냄
+    var strategy = new CyclingStrategy();
+    var values = new MetricValues();
+    values.setAllValid();
+    values.hrValid = false;  // HR 없는 시나리오
+
+    // 0~29초 hr=0 → Ascent 모드 락
+    values.hr = 0;
+    for (var t = 0; t < 30; t++) {
+        values.elapsedSeconds = t;
+        strategy.buildPackets(values);
+    }
+    // 락 발동
+    values.elapsedSeconds = 30;
+    values.totalAscent = 500;
+    strategy.buildPackets(values);
+
+    // 60초 — totalAscent 센서 일시 무효 (예: 활동 재시작 직후)
+    values.elapsedSeconds = 60;
+    values.totalAscent = 0;
+    values.totalAscentValid = false;
+    var packets = strategy.buildPackets(values);
+
+    for (var i = 0; i < packets.size(); i++) {
+        if (packets[i][0] == 0x0B) {
+            logger.debug("HR slot packet leaked when totalAscentValid=false");
+            return false;
+        }
+    }
+    return true;
 }

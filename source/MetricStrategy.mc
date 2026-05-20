@@ -23,6 +23,10 @@ class MetricStrategy {
 //! Per-compute metric values container.
 //! 매 compute() 호출마다 새로 채워지며 strategy 에 전달된다.
 //! 누적 상태(예: HR 30초 락) 는 strategy 가 자체 보유한다.
+//!
+//! *Valid 플래그: 해당 메트릭이 실제 센서값인지(true) 또는 fallback 0인지(false).
+//! Strategy.buildPackets() 가 이 플래그를 보고 stale 0 패킷을 iLens 로 보내지 않는다.
+//! 기본값 false = "안 보내는 게 안전" (재연결 직후 0 패킷이 last value 를 덮어쓰는 결함 방지).
 class MetricValues {
     public var elapsedSeconds as Lang.Number = 0;
     public var distance as Lang.Number = 0;        // meters
@@ -33,7 +37,24 @@ class MetricValues {
     public var altitudeM as Lang.Number = 0;       // cycling only (meters)
     public var totalAscent as Lang.Number = 0;     // cycling only (meters)
 
+    public var speedValid as Lang.Boolean = false;
+    public var hrValid as Lang.Boolean = false;
+    public var cadenceValid as Lang.Boolean = false;
+    public var distanceValid as Lang.Boolean = false;
+    public var altitudeValid as Lang.Boolean = false;
+    public var totalAscentValid as Lang.Boolean = false;
+
     function initialize() {
+    }
+
+    //! 테스트 헬퍼: 모든 valid 플래그를 true 로. 기존 인코딩 회귀 테스트가 한 줄로 새 API 에 적응.
+    function setAllValid() as Void {
+        speedValid = true;
+        hrValid = true;
+        cadenceValid = true;
+        distanceValid = true;
+        altitudeValid = true;
+        totalAscentValid = true;
     }
 }
 

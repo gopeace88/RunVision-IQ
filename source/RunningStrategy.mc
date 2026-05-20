@@ -10,15 +10,24 @@ class RunningStrategy extends MetricStrategy {
         MetricStrategy.initialize();
     }
 
-    //! 5개 메트릭 패킷을 순서대로 생성 (기존 line 608-612 와 동등)
-    //! Sport Time → Velocity(pace) → Heart Rate → Cadence → Distance
+    //! 메트릭 패킷을 순서대로 생성. valid 플래그가 false 인 메트릭은 패킷을 만들지 않는다.
+    //! → iLens 가 stale 0 으로 갱신되지 않고 직전 유효값 유지.
+    //! Sport Time 은 garmin timer 가 항상 정확하므로 무조건 전송.
     function buildPackets(values as MetricValues) as Lang.Array<Lang.ByteArray> {
         var packets = [] as Lang.Array<Lang.ByteArray>;
         packets.add(ILensProtocol.createExerciseTimePacket(values.elapsedSeconds));
-        packets.add(ILensProtocol.createVelocityPacket(values.paceSeconds));
-        packets.add(ILensProtocol.createHeartRatePacket(values.hr));
-        packets.add(ILensProtocol.createCadencePacket(values.cadence));
-        packets.add(ILensProtocol.createDistancePacket(values.distance));
+        if (values.speedValid) {
+            packets.add(ILensProtocol.createVelocityPacket(values.paceSeconds));
+        }
+        if (values.hrValid) {
+            packets.add(ILensProtocol.createHeartRatePacket(values.hr));
+        }
+        if (values.cadenceValid) {
+            packets.add(ILensProtocol.createCadencePacket(values.cadence));
+        }
+        if (values.distanceValid) {
+            packets.add(ILensProtocol.createDistancePacket(values.distance));
+        }
         return packets;
     }
 }
