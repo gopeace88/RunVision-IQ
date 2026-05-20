@@ -765,6 +765,8 @@ class RunVisionIQView extends WatchUi.DataField {
             _charRetryCount = 0;  // 재시도 카운터 리셋
             _connectionStartTime = 0;
             _pairingStartTime = 0;  // ✅ 타임아웃 추적 종료
+            _isWriting = false;  // 진행 중이던 이전 연결 write 상태 폐기
+            _writeQueue = [] as Lang.Array<Lang.ByteArray>;  // stale packet이 재연결 후 전송되지 않도록 비움
             // 속도 감지 리셋 (재연결 시 다시 측정)
             _useDefaultWrite = false;
             _writeStartTime = 0;
