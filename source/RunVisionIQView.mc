@@ -451,7 +451,14 @@ class RunVisionIQView extends WatchUi.DataField {
                     _connectedDevice = null;
                     _scanStatus = "RECONN...";
                     addBleLog("RECONN");
-                    // → auto-reconnect 로직이 다음 compute에서 동작
+                    // ❗ 재연결 게이트(line ~375)는 _needsReconnect를 요구함. disconnect 핸들러와
+                    //    동일하게 arming하지 않으면 _needsReconnect=false라 재연결이 영영 안 돌고
+                    //    영구 disconnect 상태로 고착됨.
+                    if (_autoReconnectEnabled) {
+                        _needsReconnect = true;
+                        _lastReconnectTime = _elapsedSeconds;
+                        _isReconnecting = false;
+                    }
                 } else {
                     // 실패 횟수 표시 (1~4) - 사용자가 이상 상태 인지 가능
                     _scanStatus = "CHAR_FAIL(" + _charRetryCount + ")";
