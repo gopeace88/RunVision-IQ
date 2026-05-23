@@ -92,8 +92,7 @@ class RunVisionIQView extends WatchUi.DataField {
     private const RECONNECT_FAST_INTERVAL = 5;               // 빠른 재연결 간격 (초)
     private const RECONNECT_SLOW_INTERVAL = 60;              // 느린 재연결 간격 (초)
     private const RECONNECT_FAST_MAX = 5;                    // 빠른 재연결 최대 횟수
-    // ⚠️ 런타임에 manifest version을 못 읽으므로 상수로 둠. manifest.xml version과 수동 동기화할 것.
-    private const APP_VERSION = "1.2.0";
+    // 앱 버전은 source/AppVersion.mc 의 AppVersion.VALUE 사용 (build.sh 가 manifest.xml 에서 자동 생성·동기화).
 
     // ✅ Pairing 타임아웃 (Connecting 상태 멈춤 방지)
     // System.getTimer() 사용 - 액티비티 시작 전에도 동작
@@ -690,9 +689,9 @@ class RunVisionIQView extends WatchUi.DataField {
             var statusText = _isConnected ? "Connected" : _scanStatus;
             dc.drawText(centerX, centerY + 10, Graphics.FONT_SMALL, statusText, Graphics.TEXT_JUSTIFY_CENTER);
 
-            // 앱 버전 (상태 아래, 작고 흐리게). manifest version과 수동 동기화(APP_VERSION 상수).
+            // 앱 버전 (상태 아래, 작고 흐리게). manifest version 자동 동기화(build.sh → AppVersion.mc).
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(centerX, centerY + 35, Graphics.FONT_XTINY, "v" + APP_VERSION, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(centerX, centerY + 35, Graphics.FONT_XTINY, "v" + AppVersion.VALUE, Graphics.TEXT_JUSTIFY_CENTER);
 
         } catch (ex) {
             // Hardcoded coords — dc.getWidth() can throw if dc is broken
