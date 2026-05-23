@@ -1,0 +1,23 @@
+{
+  "cli_version": "dev",
+  "checkpoint_id": "aadb23675cd6",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/aa/db23675cd6/0/metadata.json",
+      "transcript": "/aa/db23675cd6/0/full.jsonl",
+      "content_hash": "/aa/db23675cd6/0/content_hash.txt",
+      "prompt": "/aa/db23675cd6/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 44381,
+    "cache_creation_tokens": 2322294,
+    "cache_read_tokens": 61699482,
+    "output_tokens": 426897,
+    "api_call_count": 215
+  }
+}
