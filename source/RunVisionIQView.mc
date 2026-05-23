@@ -52,6 +52,10 @@ class RunVisionIQView extends WatchUi.DataField {
     private var _timeLabel as Lang.String = "0:00";
     private var _paceLabel as Lang.String = "--:--";
 
+    // 로고 캐시: 매 onUpdate 마다 loadResource(176x37 RGBA ≈ 26KB) 하면 DataField 메모리
+    // 예산 초과(OOM)·watchdog 위험 → 한 번만 로드해 재사용. (버전 표시 추가 후 IQ! 크래시 수정)
+    private var _logoCache = null;
+
     // Statistics tracking
     private var _totalSpeed as Lang.Float = 0.0;
     private var _speedSamples as Lang.Number = 0;
@@ -681,17 +685,21 @@ class RunVisionIQView extends WatchUi.DataField {
             var centerX = width / 2;
             var centerY = height / 2;
 
-            // 로고 표시 (중앙, 176x37)
-            var logo = WatchUi.loadResource(Rez.Drawables.RunVisionLogo);
-            dc.drawBitmap(centerX - 88, centerY - 40, logo);
+            // 로고 표시 (중앙, 176x37) — 한 번만 로드해 캐시 (매 프레임 ≈26KB 할당 방지 → OOM/watchdog 회피)
+            if (_logoCache == null) {
+                _logoCache = WatchUi.loadResource(Rez.Drawables.RunVisionLogo);
+            }
+            dc.drawBitmap(centerX - 88, centerY - 40, _logoCache);
 
             // 상태 텍스트 (로고 아래)
             var statusText = _isConnected ? "Connected" : _scanStatus;
-            dc.drawText(centerX, centerY + 10, Graphics.FONT_SMALL, statusText, Graphics.TEXT_JUSTIFY_CENTER);
+            var statusY = centerY + 10;
+            dc.drawText(centerX, statusY, Graphics.FONT_SMALL, statusText, Graphics.TEXT_JUSTIFY_CENTER);
 
-            // 앱 버전 (상태 아래, 작고 흐리게). manifest version 자동 동기화(build.sh → AppVersion.mc).
+            // 앱 버전 (상태 텍스트 바로 아래, 작고 흐리게) — 상태 글자 높이만큼 띄워 겹침 방지(기기·폰트 무관).
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(centerX, centerY + 35, Graphics.FONT_XTINY, "v" + AppVersion.VALUE, Graphics.TEXT_JUSTIFY_CENTER);
+            var versionY = statusY + dc.getFontHeight(Graphics.FONT_SMALL) + 4;
+            dc.drawText(centerX, versionY, Graphics.FONT_XTINY, "v" + AppVersion.VALUE, Graphics.TEXT_JUSTIFY_CENTER);
 
         } catch (ex) {
             // Hardcoded coords — dc.getWidth() can throw if dc is broken
