@@ -1,0 +1,27 @@
+{
+  "cli_version": "dev",
+  "checkpoint_id": "db957f10d692",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "build.sh",
+    "source/AppVersion.mc",
+    "source/RunVisionIQView.mc"
+  ],
+  "sessions": [
+    {
+      "metadata": "/db/957f10d692/0/metadata.json",
+      "transcript": "/db/957f10d692/0/full.jsonl",
+      "content_hash": "/db/957f10d692/0/content_hash.txt",
+      "prompt": "/db/957f10d692/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 40884,
+    "cache_creation_tokens": 998353,
+    "cache_read_tokens": 30824961,
+    "output_tokens": 249014,
+    "api_call_count": 150
+  }
+}
