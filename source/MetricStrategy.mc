@@ -66,6 +66,21 @@ function metricPresent(value as Lang.Number or Lang.Float or Null) as Lang.Boole
     return value != null;
 }
 
+//! 메트릭 그리드(1-2-2) 좌표를 화면 크기·형태 기반으로 계산(반응형). 픽셀 고정 금지.
+//! isRound=true 면 좌우 컬럼을 더 안쪽으로 inset 해 둥근 베젤 클리핑을 막는다.
+//! 행 간격 균등(0.20/0.45/0.70)로 깔끔한 세로 리듬. 값은 컬럼 중앙 정렬 기준점.
+function metricGridLayout(width as Lang.Number, height as Lang.Number, isRound as Lang.Boolean) as Lang.Dictionary {
+    var inset = isRound ? 0.30 : 0.25;
+    return {
+        :centerX => width / 2,
+        :leftX  => (width * inset).toNumber(),
+        :rightX => (width * (1.0 - inset)).toNumber(),
+        :timeY  => (height * 0.20).toNumber(),
+        :row1Y  => (height * 0.45).toNumber(),
+        :row2Y  => (height * 0.70).toNumber()
+    };
+}
+
 //! sport 정수값으로부터 strategy 선택. 테스트 가능한 진입점.
 //! Activity.SPORT_CYCLING → CyclingStrategy
 //! 그 외 (RUNNING/GENERIC/null/unknown) → RunningStrategy (안전한 기본값)

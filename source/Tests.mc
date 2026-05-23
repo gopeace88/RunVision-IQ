@@ -120,6 +120,25 @@ function testMetricPresent_positiveIsSendable(logger as Logger) as Boolean {
     return metricPresent(170) == true;
 }
 
+// === metricGridLayout: 반응형 그리드 좌표 ===
+(:test)
+function testMetricGridLayout_roundInsetsMoreThanRect(logger as Logger) as Boolean {
+    var r = metricGridLayout(416, 416, true);
+    var q = metricGridLayout(416, 416, false);
+    // 둥근 화면은 좌우 컬럼을 더 안쪽으로(클리핑 방지) → round leftX > rect leftX
+    return (r[:leftX] as Lang.Number) > (q[:leftX] as Lang.Number);
+}
+
+(:test)
+function testMetricGridLayout_withinBounds(logger as Logger) as Boolean {
+    var L = metricGridLayout(416, 416, true);
+    var lx = L[:leftX] as Lang.Number;
+    var rx = L[:rightX] as Lang.Number;
+    var ty = L[:timeY] as Lang.Number;
+    var r2 = L[:row2Y] as Lang.Number;
+    return lx > 0 && rx < 416 && lx < rx && ty > 0 && r2 < 416;
+}
+
 // === RunningStrategy regression tests ===
 // 이 테스트들은 기존 러닝 모드 패킷이 한 비트도 안 바뀌었음을 보증한다.
 
