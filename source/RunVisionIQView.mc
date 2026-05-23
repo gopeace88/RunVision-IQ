@@ -51,6 +51,7 @@ class RunVisionIQView extends WatchUi.DataField {
     private var _distanceLabel as Lang.String = "0.00";
     private var _timeLabel as Lang.String = "0:00";
     private var _paceLabel as Lang.String = "--:--";
+    private var _altitudeLabel as Lang.String = "---";  // 사이클 현재 고도(m) — 글래스 전송값(cadence슬롯 0x0E)과 동일
 
     // 로고 캐시: 매 onUpdate 마다 loadResource(176x37 RGBA ≈ 26KB) 하면 DataField 메모리
     // 예산 초과(OOM)·watchdog 위험 → 한 번만 로드해 재사용. (버전 표시 추가 후 IQ! 크래시 수정)
@@ -267,6 +268,7 @@ class RunVisionIQView extends WatchUi.DataField {
         _speedLabel = "---";
         _hrLabel = "---";
         _cadenceLabel = "---";
+        _altitudeLabel = "---";
         _devicesFound = 0;
         _elapsedSeconds = 0;  // ✅ 경과 시간 초기화
     }
@@ -574,6 +576,8 @@ class RunVisionIQView extends WatchUi.DataField {
 
         // 2. 고도 가져오기
         var altitude = info != null && info has :altitude ? info.altitude : null;
+        // 워치 표시용 고도 라벨 (글래스 전송값 altitudeM = roundFloat(altitude)와 동일 반올림)
+        if (altitude != null) { _altitudeLabel = roundFloat(altitude).format("%d"); } else { _altitudeLabel = "---"; }
 
         // 3. Running Power 계산 (속도와 거리가 유효할 때만)
         if (speedMoving && distanceValid && altitude != null) {  // 파워는 이동 중에만(기존 동작 보존)
