@@ -93,6 +93,33 @@ function testMetricValues_DefaultsAreZero(logger as Logger) as Boolean {
         && values.totalAscent == 0;
 }
 
+// === metricPresent: 정지 시 0 전송 회귀 가드 ===
+// 회귀: valid 도출이 `!= null && > 0` 라서 정지(실제 0)까지 skip → rLens 직전값 고착.
+// 수정 의도: 센서가 값을 주면(0 포함) 전송, null(no-data/재연결)만 skip(50844a5 보존).
+
+(:test)
+function testMetricPresent_zeroIsSendable(logger as Logger) as Boolean {
+    // 정지 시 실제 0(Number)은 전송돼야 한다 (skip 아님).
+    return metricPresent(0) == true;
+}
+
+(:test)
+function testMetricPresent_zeroFloatIsSendable(logger as Logger) as Boolean {
+    // 속도(Float) 0.0(정지)도 전송돼야 한다.
+    return metricPresent(0.0) == true;
+}
+
+(:test)
+function testMetricPresent_nullIsSkipped(logger as Logger) as Boolean {
+    // 데이터 없음(null)만 skip → 직전값 보존 (50844a5 의도).
+    return metricPresent(null) == false;
+}
+
+(:test)
+function testMetricPresent_positiveIsSendable(logger as Logger) as Boolean {
+    return metricPresent(170) == true;
+}
+
 // === RunningStrategy regression tests ===
 // 이 테스트들은 기존 러닝 모드 패킷이 한 비트도 안 바뀌었음을 보증한다.
 

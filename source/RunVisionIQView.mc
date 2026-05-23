@@ -473,9 +473,13 @@ class RunVisionIQView extends WatchUi.DataField {
         var speedMs = info != null && info has :currentSpeed ? info.currentSpeed : null;
         var speedKmh = 0.0;  // Float — 사이클 모드 0x07 × 60 트릭에서 소수점 정밀도 보존
         var paceSeconds = 0;  // ← Pace를 초 단위로 저장 (iLens 전송용)
-        var speedValid = speedMs != null && speedMs > 0;
+        // 전송 여부: 센서값 존재(0=정지 포함)면 전송, null(no-data/재연결)만 skip.
+        // 과거 `&& > 0` 은 정지(실제 0)까지 skip → rLens 직전값 고착 + velocity 갭 후 펌웨어 latch 회귀.
+        var speedValid = metricPresent(speedMs);
+        // 계산 가드: pace = 60/(speed) 0 나눗셈 방지 위해 양수일 때만 계산. 정지면 pace/speed=0 유지(→ 0 전송).
+        var speedMoving = speedMs != null && speedMs > 0;
 
-        if (speedValid) {
+        if (speedMoving) {
             speedKmh = speedMs * 3.6;  // Float 유지 (사이클 precision)
             _speedLabel = ((speedKmh + 0.5).toNumber()).format("%d");  // 표시는 정수 km/h
 
@@ -517,7 +521,7 @@ class RunVisionIQView extends WatchUi.DataField {
 
         // Get current cadence (ActiveLook 패턴)
         var cadence = info != null && info has :currentCadence ? info.currentCadence : null;
-        var cadenceValid = cadence != null && cadence > 0;
+        var cadenceValid = metricPresent(cadence);  // 0(정지)=전송, null(미지원)=skip
         if (cadenceValid) {
             _cadenceLabel = cadence.format("%d");
         } else {
@@ -567,7 +571,7 @@ class RunVisionIQView extends WatchUi.DataField {
         var altitude = info != null && info has :altitude ? info.altitude : null;
 
         // 3. Running Power 계산 (속도와 거리가 유효할 때만)
-        if (speedValid && distanceValid && altitude != null) {
+        if (speedMoving && distanceValid && altitude != null) {  // 파워는 이동 중에만(기존 동작 보존)
             // 경사도 계산 (최근 구간의 고도 변화)
             var grade = 0.0;
             var distanceDelta = distance - _previousDistance;

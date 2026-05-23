@@ -58,6 +58,14 @@ class MetricValues {
     }
 }
 
+//! 메트릭 전송 가능 여부: 센서가 값을 제공하면(0 포함) true; null/미존재만 false.
+//! 정지(실제 0)는 전송 → rLens 가 0 표시 + velocity 패킷 연속성 유지(끊김 후 펌웨어 latch 방지).
+//! null(재연결/no-data)만 skip → 직전 유효값 보존(50844a5 의도). 과잉 `> 0` 조건 제거가 핵심:
+//! 기존 `!= null && > 0` 은 "데이터 없음"과 "실제 0(정지)"을 한 덩어리로 묶어 정지까지 skip 했음.
+function metricPresent(value as Lang.Number or Lang.Float or Null) as Lang.Boolean {
+    return value != null;
+}
+
 //! sport 정수값으로부터 strategy 선택. 테스트 가능한 진입점.
 //! Activity.SPORT_CYCLING → CyclingStrategy
 //! 그 외 (RUNNING/GENERIC/null/unknown) → RunningStrategy (안전한 기본값)
