@@ -680,35 +680,39 @@ class RunVisionIQView extends WatchUi.DataField {
     //! @param dc Device context
     function onUpdate(dc as Graphics.Dc) as Void {
         try {
-            dc.setColor(Graphics.COLOR_TRANSPARENT, Graphics.COLOR_BLACK);
-            dc.clear();
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-
-            var width = dc.getWidth();
-            var height = dc.getHeight();
-            var centerX = width / 2;
-            var centerY = height / 2;
-
-            // 로고 표시 (중앙, 176x37) — 한 번만 로드해 캐시 (매 프레임 ≈26KB 할당 방지 → OOM/watchdog 회피)
-            if (_logoCache == null) {
-                _logoCache = WatchUi.loadResource(Rez.Drawables.RunVisionLogo);
-            }
-            dc.drawBitmap(centerX - 88, centerY - 40, _logoCache);
-
-            // 상태 텍스트 (로고 아래)
-            var statusText = _isConnected ? "Connected" : _scanStatus;
-            var statusY = centerY + 10;
-            dc.drawText(centerX, statusY, Graphics.FONT_SMALL, statusText, Graphics.TEXT_JUSTIFY_CENTER);
-
-            // 앱 버전 (상태 텍스트 바로 아래, 작고 흐리게) — 상태 글자 높이만큼 띄워 겹침 방지(기기·폰트 무관).
-            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            var versionY = statusY + dc.getFontHeight(Graphics.FONT_SMALL) + 4;
-            dc.drawText(centerX, versionY, Graphics.FONT_XTINY, "v" + AppVersion.VALUE, Graphics.TEXT_JUSTIFY_CENTER);
-
+            drawStatusScreen(dc);
         } catch (ex) {
             // Hardcoded coords — dc.getWidth() can throw if dc is broken
             try { dc.drawText(120, 50, Graphics.FONT_SMALL, "ERR", Graphics.TEXT_JUSTIFY_CENTER); } catch (ex2) {}
         }
+    }
+
+    //! 연결 전 화면: 로고 + 상태 + 버전 (기존 동작 그대로)
+    private function drawStatusScreen(dc as Graphics.Dc) as Void {
+        dc.setColor(Graphics.COLOR_TRANSPARENT, Graphics.COLOR_BLACK);
+        dc.clear();
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+
+        var width = dc.getWidth();
+        var height = dc.getHeight();
+        var centerX = width / 2;
+        var centerY = height / 2;
+
+        // 로고 표시 (중앙, 176x37) — 한 번만 로드해 캐시 (매 프레임 ≈26KB 할당 방지 → OOM/watchdog 회피)
+        if (_logoCache == null) {
+            _logoCache = WatchUi.loadResource(Rez.Drawables.RunVisionLogo);
+        }
+        dc.drawBitmap(centerX - 88, centerY - 40, _logoCache);
+
+        // 상태 텍스트 (로고 아래)
+        var statusText = _isConnected ? "Connected" : _scanStatus;
+        var statusY = centerY + 10;
+        dc.drawText(centerX, statusY, Graphics.FONT_SMALL, statusText, Graphics.TEXT_JUSTIFY_CENTER);
+
+        // 앱 버전 (상태 텍스트 바로 아래, 작고 흐리게) — 상태 글자 높이만큼 띄워 겹침 방지(기기·폰트 무관).
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        var versionY = statusY + dc.getFontHeight(Graphics.FONT_SMALL) + 4;
+        dc.drawText(centerX, versionY, Graphics.FONT_XTINY, "v" + AppVersion.VALUE, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     //
