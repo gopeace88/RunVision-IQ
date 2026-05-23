@@ -75,9 +75,9 @@ function metricGridLayout(width as Lang.Number, height as Lang.Number, isRound a
         :centerX => width / 2,
         :leftX  => (width * inset).toNumber(),
         :rightX => (width * (1.0 - inset)).toNumber(),
-        :timeY  => (height * 0.20).toNumber(),
-        :row1Y  => (height * 0.45).toNumber(),
-        :row2Y  => (height * 0.70).toNumber()
+        :timeY  => (height * 0.14).toNumber(),
+        :row1Y  => (height * 0.36).toNumber(),
+        :row2Y  => (height * 0.58).toNumber()
     };
 }
 

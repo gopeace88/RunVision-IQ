@@ -680,7 +680,11 @@ class RunVisionIQView extends WatchUi.DataField {
     //! @param dc Device context
     function onUpdate(dc as Graphics.Dc) as Void {
         try {
-            drawStatusScreen(dc);
+            if (_isConnected) {
+                drawMetricGrid(dc);
+            } else {
+                drawStatusScreen(dc);
+            }
         } catch (ex) {
             // Hardcoded coords — dc.getWidth() can throw if dc is broken
             try { dc.drawText(120, 50, Graphics.FONT_SMALL, "ERR", Graphics.TEXT_JUSTIFY_CENTER); } catch (ex2) {}
@@ -713,6 +717,44 @@ class RunVisionIQView extends WatchUi.DataField {
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         var versionY = statusY + dc.getFontHeight(Graphics.FONT_SMALL) + 4;
         dc.drawText(centerX, versionY, Graphics.FONT_XTINY, "v" + AppVersion.VALUE, Graphics.TEXT_JUSTIFY_CENTER);
+    }
+
+    //! 연결 후 화면: 5개 메트릭 1-2-2 그리드 (반응형, 텍스트만 — 비트맵 없음).
+    //! 러닝: TIME / PACE·HR / CAD·DIST   사이클: TIME / SPEED·HR / ALT·DIST
+    private function drawMetricGrid(dc as Graphics.Dc) as Void {
+        dc.setColor(Graphics.COLOR_TRANSPARENT, Graphics.COLOR_BLACK);
+        dc.clear();
+
+        var w = dc.getWidth();
+        var h = dc.getHeight();
+        var shape = System.getDeviceSettings().screenShape;
+        var isRound = (shape == System.SCREEN_SHAPE_ROUND) || (shape == System.SCREEN_SHAPE_SEMI_ROUND);
+        var L = metricGridLayout(w, h, isRound);
+        // 사이클 여부는 활동 sport로 직접 판별 — BLE/_strategy 타이밍과 무관(연결 전·초기 프레임에도 정확).
+        var profile = Activity.getProfileInfo();
+        var isCycling = (profile != null) && (profile.sport == Activity.SPORT_CYCLING);
+        var cx = L[:centerX] as Lang.Number;
+        var lx = L[:leftX] as Lang.Number;
+        var rx = L[:rightX] as Lang.Number;
+
+        // 상단: TIME (중앙)
+        drawCell(dc, cx, L[:timeY] as Lang.Number, _timeLabel, "TIME");
+        // 중단: 좌 PACE/SPEED · 우 CAD/ALT
+        drawCell(dc, lx, L[:row1Y] as Lang.Number, isCycling ? _speedLabel : _paceLabel, isCycling ? "SPEED" : "PACE");
+        drawCell(dc, rx, L[:row1Y] as Lang.Number, isCycling ? _altitudeLabel : _cadenceLabel, isCycling ? "ALT" : "CAD");
+        // 하단: 좌 DIST · 우 HR
+        drawCell(dc, lx, L[:row2Y] as Lang.Number, _distanceLabel, "DIST");
+        drawCell(dc, rx, L[:row2Y] as Lang.Number, _hrLabel, "HR");
+    }
+
+    //! 셀 1개: 값(큰 숫자 폰트) + 그 아래 라벨(작은 회색). x,y = 값의 중앙정렬 기준(상단).
+    //! 값-라벨을 한 단위로 붙여 그려 줄맞춤·간격 일관.
+    private function drawCell(dc as Graphics.Dc, x as Lang.Number, y as Lang.Number, value as Lang.String, label as Lang.String) as Void {
+        // 값: FONT_LARGE. 라벨: FONT_XTINY(값의 절반 이하). 라벨은 값 높이 바로 아래 → 겹침 없음.
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(x, y, Graphics.FONT_LARGE, value, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(x, y + dc.getFontHeight(Graphics.FONT_LARGE), Graphics.FONT_XTINY, label, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     //
