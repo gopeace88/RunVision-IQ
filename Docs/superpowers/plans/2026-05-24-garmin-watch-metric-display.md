@@ -24,11 +24,12 @@
     private var _altitudeLabel as Lang.String = "---";  // 사이클 현재 고도(m) 표시용
 ```
 
-- [ ] **Step 2: compute()에서 고도 포맷** — `var altitude = info != null && info has :altitude ? info.altitude : null;`(576행 부근) 바로 다음 줄에 추가:
+- [ ] **Step 2: compute()에서 고도 포맷** — `var altitude = info != null && info has :altitude ? info.altitude : null;`(576행 부근) 바로 다음 줄에 추가. **글래스 전송값(`_metricValues.altitudeM = roundFloat(altitude)`, 643행, cadence 슬롯 0x0E로 전송)과 동일한 `roundFloat` 반올림을 써서 워치=글래스 숫자 일치**:
 
 ```monkeyc
-        if (altitude != null) { _altitudeLabel = altitude.format("%d"); } else { _altitudeLabel = "---"; }
+        if (altitude != null) { _altitudeLabel = roundFloat(altitude).format("%d"); } else { _altitudeLabel = "---"; }
 ```
+(Float 직접 `.format("%d")` 금지 — `roundFloat`가 Number 반환, 다른 라벨과 동일 패턴.)
 
 - [ ] **Step 3: reset 시 초기화** — `_cadenceLabel = "---";`(269행, onTimerReset류) 부근에 추가:
 
