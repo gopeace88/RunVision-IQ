@@ -742,15 +742,15 @@ class RunVisionIQView extends WatchUi.DataField {
         var lx = L[:leftX] as Lang.Number;
         var rx = L[:rightX] as Lang.Number;
 
-        // 반응형 값 폰트: 행 간격에 (값+라벨)이 들어가는 '가장 큰' 폰트 선택(LARGE→MEDIUM→SMALL).
-        // 짧은 화면(venusq2m 320h, instinct2 176h 등)에서 라벨이 다음 행 값과 겹치는 것 방지.
+        // 반응형 값 폰트: 행 간격에 (값 + 라벨XTINY)이 들어가는 '가장 큰' 값 폰트 선택(LARGE→MEDIUM→SMALL).
+        // 라벨은 전 기기 XTINY 고정(사용자 결정) — 값 대비 ~절반이라 계층이 선명(큰 폰트끼리는 차이가 작아
+        // "같아 보임"). 행을 화면에 넓게 펼쳐 행 간격이 크므로 큰 화면은 값이 LARGE까지 커진다.
         var rowGap = (L[:row1Y] as Lang.Number) - (L[:timeY] as Lang.Number);
         var labelH = dc.getFontHeight(Graphics.FONT_XTINY);
-        var gap = labelH / 2;  // 라벨과 다음 행 값 사이 숨구멍(사용자 요청: 라벨/다음줄 구분)
         var fonts = [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_SMALL];
-        var valueFont = Graphics.FONT_SMALL;  // 최소 폴백(셋 다 행간에 안 맞아도 가장 작은 것)
+        var valueFont = Graphics.FONT_SMALL;   // 폴백: 가장 작은 값 폰트
         for (var i = 0; i < fonts.size(); i++) {
-            if (dc.getFontHeight(fonts[i]) + labelH + gap <= rowGap) {
+            if (dc.getFontHeight(fonts[i]) + labelH <= rowGap) {
                 valueFont = fonts[i];
                 break;
             }
@@ -769,7 +769,7 @@ class RunVisionIQView extends WatchUi.DataField {
     //! 셀 1개: 값(큰 숫자 폰트) + 그 아래 라벨(작은 회색). x,y = 값의 중앙정렬 기준(상단).
     //! 값-라벨을 한 단위로 붙여 그려 줄맞춤·간격 일관.
     private function drawCell(dc as Graphics.Dc, x as Lang.Number, y as Lang.Number, value as Lang.String, label as Lang.String, valueFont as Graphics.FontDefinition) as Void {
-        // 값: valueFont(반응형 LARGE/MEDIUM). 라벨: FONT_XTINY, 값 높이 바로 아래 → 겹침 없음.
+        // 값: valueFont(반응형 LARGE/MEDIUM/SMALL). 라벨: FONT_XTINY 고정, 값 높이 바로 아래 → 겹침 없음.
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(x, y, valueFont, value, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);

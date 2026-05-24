@@ -68,17 +68,17 @@ function metricPresent(value as Lang.Number or Lang.Float or Null) as Lang.Boole
 
 //! 메트릭 그리드(1-2-2) 좌표를 화면 크기·형태 기반으로 계산(반응형). 픽셀 고정 금지.
 //! isRound=true 면 좌우 컬럼을 더 안쪽으로 inset 해 둥근 베젤 클리핑을 막는다.
-//! 행 배치: instinct 계열만 아래로(0.20/0.45/0.70), 나머지는 위로(0.14/0.36/0.58, fr165 실기기 검증값).
-//! instinct(176 등)는 우상단 보조창 + 상단 클리핑 때문에 행을 내려야 하지만, 그 외 기기는
-//! 위쪽이 중앙 균형상 더 낫다(사용자 요청). 보조창 유무 API가 없어 '좁은 메인창(폭<200)'으로 추정
-//! — instinct2(176)는 낮게, fr55(208)+·사각은 높게. (instinct는 screenShape가 ROUND로 보고되지
-//! 않으므로 isRound 조건은 쓰지 않는다 — 폭만으로 판별.) 값은 컬럼 중앙 정렬 기준점.
+//! 행 배치: 일반 기기는 3행을 화면 세로에 넓게 펼쳐(0.10/0.385/0.67) 행간격↑ → 값 폰트 최대화
+//! (drawMetricGrid가 행간격에 맞는 가장 큰 값 폰트 선택). instinct 계열만 아래로(0.20/0.45/0.70) —
+//! 우상단 보조창 + 상단 클리핑 회피(실기 검증값, 건드리지 않음). 보조창 유무 API가 없어 '좁은
+//! 메인창(폭<200)'으로 추정 (instinct는 screenShape가 ROUND로 안 잡혀 isRound 대신 폭으로 판별).
+//! 값은 컬럼 중앙 정렬 기준점.
 function metricGridLayout(width as Lang.Number, height as Lang.Number, isRound as Lang.Boolean) as Lang.Dictionary {
     var inset = isRound ? 0.30 : 0.25;
     var subWindow = (width < 200);  // instinct 계열 추정(보조창 + 좁은 메인창; 폭만으로)
-    var timeF = subWindow ? 0.20 : 0.14;
-    var row1F = subWindow ? 0.45 : 0.36;
-    var row2F = subWindow ? 0.70 : 0.58;
+    var timeF = subWindow ? 0.20 : 0.10;
+    var row1F = subWindow ? 0.45 : 0.385;
+    var row2F = subWindow ? 0.70 : 0.67;
     return {
         :centerX => width / 2,
         :leftX  => (width * inset).toNumber(),

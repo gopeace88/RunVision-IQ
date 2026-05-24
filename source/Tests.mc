@@ -141,14 +141,14 @@ function testMetricGridLayout_withinBounds(logger as Logger) as Boolean {
 
 (:test)
 function testMetricGridLayout_narrowDeviceRowsLower(logger as Logger) as Boolean {
-    // instinct 계열(폭<200, 보조창)은 행을 아래로(timeY 0.20), fr55(208)+는 위로(0.14).
+    // instinct 계열(폭<200, 보조창)은 행을 아래로(timeY 0.20), 그 외는 위로 펼침(timeY 0.10).
     // screenShape가 ROUND로 안 잡히는 instinct 때문에 isRound 무관하게 폭만으로 판별해야 함(회귀 방지).
     var narrow = metricGridLayout(176, 176, false);   // instinct2 (round=false 보고)
     var wide   = metricGridLayout(208, 208, true);    // fr55
     return (narrow[:timeY] as Lang.Number) == (176 * 0.20).toNumber()   // 35
-        && (wide[:timeY]   as Lang.Number) == (208 * 0.14).toNumber()   // 29
+        && (wide[:timeY]   as Lang.Number) == (208 * 0.10).toNumber()   // 20
         && (metricGridLayout(199, 199, true)[:timeY] as Lang.Number) == (199 * 0.20).toNumber()   // 경계: <200 → 낮게
-        && (metricGridLayout(200, 200, false)[:timeY] as Lang.Number) == (200 * 0.14).toNumber(); // 경계: ≥200 → 높게
+        && (metricGridLayout(200, 200, false)[:timeY] as Lang.Number) == (200 * 0.10).toNumber(); // 경계: ≥200 → 높게(펼침)
 }
 
 (:test)
