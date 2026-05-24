@@ -53,10 +53,6 @@ class RunVisionIQView extends WatchUi.DataField {
     private var _paceLabel as Lang.String = "--:--";
     private var _altitudeLabel as Lang.String = "---";  // 사이클 현재 고도(m) — 글래스 전송값(cadence슬롯 0x0E)과 동일
 
-    // 로고 캐시: 매 onUpdate 마다 loadResource(176x37 RGBA ≈ 26KB) 하면 DataField 메모리
-    // 예산 초과(OOM)·watchdog 위험 → 한 번만 로드해 재사용. (버전 표시 추가 후 IQ! 크래시 수정)
-    private var _logoCache = null;
-
     // Statistics tracking
     private var _totalSpeed as Lang.Float = 0.0;
     private var _speedSamples as Lang.Number = 0;
@@ -680,7 +676,9 @@ class RunVisionIQView extends WatchUi.DataField {
     //! @param dc Device context
     function onUpdate(dc as Graphics.Dc) as Void {
         try {
-            if (_isConnected) {
+            // 연결됨 + 화면이 그리드를 수용할 폭이면 그리드, 아니면 status-only(작은 기기는
+            // 메트릭을 글래스로 — 워치엔 상태만). gridFitsScreen 으로 런타임 분기(빌드 1개 전 기기 적응).
+            if (_isConnected && gridFitsScreen(dc.getWidth())) {
                 drawMetricGrid(dc);
             } else {
                 drawStatusScreen(dc);
@@ -702,11 +700,18 @@ class RunVisionIQView extends WatchUi.DataField {
         var centerX = width / 2;
         var centerY = height / 2;
 
-        // 로고 표시 (중앙, 176x37) — 한 번만 로드해 캐시 (매 프레임 ≈26KB 할당 방지 → OOM/watchdog 회피)
-        if (_logoCache == null) {
-            _logoCache = WatchUi.loadResource(Rez.Drawables.RunVisionLogo);
+        // 아주 작은 기기(Instinct 등 보조창형, width<200)는 메인창이 좁아 타이틀+상태+버전 3줄이
+        // 빡빡 → "RV"만 크게 중앙 표시. 메트릭·상태는 글래스로 가니 워치엔 필드 식별만 보이면 충분.
+        if (!gridFitsScreen(width)) {
+            dc.drawText(centerX, centerY, Graphics.FONT_LARGE, "RV",
+                Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            return;
         }
-        dc.drawBitmap(centerX - 88, centerY - 40, _logoCache);
+
+        // 타이틀(텍스트) — 모든 기기에서 로고 비트맵 대신 사용.
+        // 로고(176x37 RGBA ≈26KB)는 작은 기기(fr55/instinct2s 등)의 DataField 메모리 예산을
+        // 초과해 onUpdate 에서 OOM 크래시 → 텍스트 타이틀로 통일(메모리·기기 호환성 확보).
+        dc.drawText(centerX, centerY - 30, Graphics.FONT_MEDIUM, "RunVision", Graphics.TEXT_JUSTIFY_CENTER);
 
         // 상태 텍스트 (로고 아래)
         var statusText = _isConnected ? "Connected" : _scanStatus;
@@ -720,7 +725,7 @@ class RunVisionIQView extends WatchUi.DataField {
     }
 
     //! 연결 후 화면: 5개 메트릭 1-2-2 그리드 (반응형, 텍스트만 — 비트맵 없음).
-    //! 러닝: TIME / PACE·HR / CAD·DIST   사이클: TIME / SPEED·HR / ALT·DIST
+    //! 러닝: TIME / PACE·CAD / DIST·HR   사이클: TIME / SPEED·ALT / DIST·HR
     private function drawMetricGrid(dc as Graphics.Dc) as Void {
         dc.setColor(Graphics.COLOR_TRANSPARENT, Graphics.COLOR_BLACK);
         dc.clear();
@@ -737,24 +742,38 @@ class RunVisionIQView extends WatchUi.DataField {
         var lx = L[:leftX] as Lang.Number;
         var rx = L[:rightX] as Lang.Number;
 
+        // 반응형 값 폰트: 행 간격에 (값+라벨)이 들어가는 '가장 큰' 폰트 선택(LARGE→MEDIUM→SMALL).
+        // 짧은 화면(venusq2m 320h, instinct2 176h 등)에서 라벨이 다음 행 값과 겹치는 것 방지.
+        var rowGap = (L[:row1Y] as Lang.Number) - (L[:timeY] as Lang.Number);
+        var labelH = dc.getFontHeight(Graphics.FONT_XTINY);
+        var gap = labelH / 2;  // 라벨과 다음 행 값 사이 숨구멍(사용자 요청: 라벨/다음줄 구분)
+        var fonts = [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_SMALL];
+        var valueFont = Graphics.FONT_SMALL;  // 최소 폴백(셋 다 행간에 안 맞아도 가장 작은 것)
+        for (var i = 0; i < fonts.size(); i++) {
+            if (dc.getFontHeight(fonts[i]) + labelH + gap <= rowGap) {
+                valueFont = fonts[i];
+                break;
+            }
+        }
+
         // 상단: TIME (중앙)
-        drawCell(dc, cx, L[:timeY] as Lang.Number, _timeLabel, "TIME");
+        drawCell(dc, cx, L[:timeY] as Lang.Number, _timeLabel, "TIME", valueFont);
         // 중단: 좌 PACE/SPEED · 우 CAD/ALT
-        drawCell(dc, lx, L[:row1Y] as Lang.Number, isCycling ? _speedLabel : _paceLabel, isCycling ? "SPEED" : "PACE");
-        drawCell(dc, rx, L[:row1Y] as Lang.Number, isCycling ? _altitudeLabel : _cadenceLabel, isCycling ? "ALT" : "CAD");
+        drawCell(dc, lx, L[:row1Y] as Lang.Number, isCycling ? _speedLabel : _paceLabel, isCycling ? "SPEED" : "PACE", valueFont);
+        drawCell(dc, rx, L[:row1Y] as Lang.Number, isCycling ? _altitudeLabel : _cadenceLabel, isCycling ? "ALT" : "CAD", valueFont);
         // 하단: 좌 DIST · 우 HR
-        drawCell(dc, lx, L[:row2Y] as Lang.Number, _distanceLabel, "DIST");
-        drawCell(dc, rx, L[:row2Y] as Lang.Number, _hrLabel, "HR");
+        drawCell(dc, lx, L[:row2Y] as Lang.Number, _distanceLabel, "DIST", valueFont);
+        drawCell(dc, rx, L[:row2Y] as Lang.Number, _hrLabel, "HR", valueFont);
     }
 
     //! 셀 1개: 값(큰 숫자 폰트) + 그 아래 라벨(작은 회색). x,y = 값의 중앙정렬 기준(상단).
     //! 값-라벨을 한 단위로 붙여 그려 줄맞춤·간격 일관.
-    private function drawCell(dc as Graphics.Dc, x as Lang.Number, y as Lang.Number, value as Lang.String, label as Lang.String) as Void {
-        // 값: FONT_LARGE. 라벨: FONT_XTINY(값의 절반 이하). 라벨은 값 높이 바로 아래 → 겹침 없음.
+    private function drawCell(dc as Graphics.Dc, x as Lang.Number, y as Lang.Number, value as Lang.String, label as Lang.String, valueFont as Graphics.FontDefinition) as Void {
+        // 값: valueFont(반응형 LARGE/MEDIUM). 라벨: FONT_XTINY, 값 높이 바로 아래 → 겹침 없음.
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(x, y, Graphics.FONT_LARGE, value, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(x, y, valueFont, value, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(x, y + dc.getFontHeight(Graphics.FONT_LARGE), Graphics.FONT_XTINY, label, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(x, y + dc.getFontHeight(valueFont), Graphics.FONT_XTINY, label, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     //

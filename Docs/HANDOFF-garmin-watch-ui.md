@@ -16,21 +16,21 @@
 - `source/MetricStrategy.mc` — `metricGridLayout(width,height,isRound)` 반응형 좌표 (행 0.14/0.36/0.58, inset 둥근 0.30 / 사각 0.25)
 - `source/Tests.mc` — `testMetricGridLayout_*`, `testMetricPresent_*`
 
-## 🔧 남은 작업: #3 작은 기기 폰트 fit (맥 sim 필요 — 그래서 인계)
-- **문제:** `drawCell`이 `FONT_LARGE` 하드코딩 + 컬럼 28%/72%. 작은 기기(**fr55 208px, instinct2s 156px, instinct2 176px**)에서 FONT_LARGE 2컬럼이 **겹침/잘림**(기하학적으로 확정, 단 시각검증은 못 함 — WSL sim 불가했음).
-- **맥 sim에서 fr55/instinct2s 직접 보고 결정:**
-  - (A) **반응형 폰트**: 폭 따라 값 폰트 축소(LARGE→MEDIUM→SMALL/TINY). 모든 기기에 그리드.
-  - (B) **skip-grid-on-small**: `dc.getWidth() < ~260`이면 `drawStatusScreen`(그리드 생략). 작은 기기는 연결상태만 + 메트릭은 글래스로(제품 본질). ← **사용자 선호 경향.**
-  - 맥에서 실제 렌더 보고 (A)/(B) 최종 결정 후 구현.
+## ✅ #3 작은 기기 폰트 fit — 완료 (맥 sim 검증)
+- **반응형 값 폰트**: `drawMetricGrid`이 행 간격에 `값+라벨+숨구멍(gap)`이 맞는 가장 큰 폰트(LARGE→MEDIUM→SMALL) 선택. 라벨은 `FONT_XTINY`(시스템 최소) 유지 + 라벨/다음 행 사이 `gap=labelH/2`로 구분.
+- **가장 작은 기기만 RV**: `gridFitsScreen(width)` = `width≥170`. instinct2s(156)만 "RV", 나머지는 그리드.
+- **instinct 보조창 대응**: `metricGridLayout`이 `width<200`(instinct 추정)이면 행을 아래로(timeY 0.20/0.45/0.70) → 상단 클리핑 + 우상단 보조창 충돌 회피. 그 외는 위로(0.14/0.36/0.58).
+  - ⚠️ **함정(2회 실수)**: instinct은 `screenShape`를 ROUND로 보고하지 **않음**(`round=false`). 그래서 `isRound` 조건 쓰지 말 것 — **폭만으로** 판별. println(`dc=176x176 round=false`)로 확정. 회귀 테스트 `testMetricGridLayout_narrowDeviceRowsLower`로 잠금.
+- **맥 sim 검증**: instinct2s(RV) / instinct2(낮은 그리드) / fr55·fr165(높은 그리드) / venusq2m(rect 그리드) 전부 확인. 42 테스트 통과.
 - 참고: `venusq2m`(360×320)은 **직사각** — `metricGridLayout`의 `isRound=false`(rect inset) 경로가 실제로 쓰임.
 
 ## ⚠️ 함정 / 환경 노트 (꼭 읽을 것)
 - **시뮬레이터는 맥 네이티브로.** WSL2/Hyper-V에선 monkeydo↔sim 연결이 구조적으로 깨짐(포트 42877/1234 + interop). Ubuntu 24.04 Linux SDK도 옛 libwebkit2gtk-4.0 부재로 막힘(CIQ 8.4.1 기준 미해결). → **맥/Windows 네이티브만 깨끗.**
 - **빌드 산출물 네이밍 = `RunVisionIQ.prg`** (버전/기기 접미사 금지 — 사용자 규칙). `build.sh`가 표준 진입점(manifest 버전→`AppVersion.mc` 동기화, 증가 안 함).
 - **버전 정책: 빌드 ≠ 버전업.** 명시적 배포 시에만, 직전 배포 버전(`Docs/애플스토어/APP-STORE-SUBMISSION-LOG.md`) 확인 후 사용자 승인. versionCode는 스토어 요구로 확인 후 +1.
-- **Codex 어드버서리얼 리뷰 미해결 2건** (참고용, 강제 아님):
-  - #2 **주석/스펙 stale**: `drawMetricGrid` 헤더 주석이 옛 배치(`PACE·HR / CAD·DIST`)로 남음 — **실제 코드는 `PACE·CAD / DIST·HR`(사용자 요청 최신)**. 아래 design.md 스펙도 옛 배치 기준. → 주석+스펙을 최신 배치로 갱신 필요.
-  - #3 = 위 작은기기 fit.
+- **Codex 어드버서리얼 리뷰 종결:**
+  - #2 **주석 stale** — ✅ 해결: `drawMetricGrid` 헤더 주석을 실제 배치 `PACE·CAD / DIST·HR`(사이클 `SPEED·ALT / DIST·HR`)로 갱신. (design.md 스펙은 옛 배치라 코드가 신뢰원 — 아래 참고.)
+  - #3 = 위 작은기기 fit — ✅ 완료.
   - #1(끊김 시 상태화면)은 "정당"으로 종결(수정 안 함).
 - 설계/계획: `Docs/superpowers/specs/2026-05-24-garmin-watch-metric-display-design.md`, `Docs/superpowers/plans/2026-05-24-garmin-watch-metric-display.md` (단 스펙은 옛 PACE·HR 배치 — 코드가 최신 기준).
 

@@ -68,17 +68,33 @@ function metricPresent(value as Lang.Number or Lang.Float or Null) as Lang.Boole
 
 //! 메트릭 그리드(1-2-2) 좌표를 화면 크기·형태 기반으로 계산(반응형). 픽셀 고정 금지.
 //! isRound=true 면 좌우 컬럼을 더 안쪽으로 inset 해 둥근 베젤 클리핑을 막는다.
-//! 행 간격 균등(0.20/0.45/0.70)로 깔끔한 세로 리듬. 값은 컬럼 중앙 정렬 기준점.
+//! 행 배치: instinct 계열만 아래로(0.20/0.45/0.70), 나머지는 위로(0.14/0.36/0.58, fr165 실기기 검증값).
+//! instinct(176 등)는 우상단 보조창 + 상단 클리핑 때문에 행을 내려야 하지만, 그 외 기기는
+//! 위쪽이 중앙 균형상 더 낫다(사용자 요청). 보조창 유무 API가 없어 '좁은 메인창(폭<200)'으로 추정
+//! — instinct2(176)는 낮게, fr55(208)+·사각은 높게. (instinct는 screenShape가 ROUND로 보고되지
+//! 않으므로 isRound 조건은 쓰지 않는다 — 폭만으로 판별.) 값은 컬럼 중앙 정렬 기준점.
 function metricGridLayout(width as Lang.Number, height as Lang.Number, isRound as Lang.Boolean) as Lang.Dictionary {
     var inset = isRound ? 0.30 : 0.25;
+    var subWindow = (width < 200);  // instinct 계열 추정(보조창 + 좁은 메인창; 폭만으로)
+    var timeF = subWindow ? 0.20 : 0.14;
+    var row1F = subWindow ? 0.45 : 0.36;
+    var row2F = subWindow ? 0.70 : 0.58;
     return {
         :centerX => width / 2,
         :leftX  => (width * inset).toNumber(),
         :rightX => (width * (1.0 - inset)).toNumber(),
-        :timeY  => (height * 0.14).toNumber(),
-        :row1Y  => (height * 0.36).toNumber(),
-        :row2Y  => (height * 0.58).toNumber()
+        :timeY  => (height * timeF).toNumber(),
+        :row1Y  => (height * row1F).toNumber(),
+        :row2Y  => (height * row2F).toNumber()
     };
+}
+
+//! 그리드(1-2-2)를 띄울지 vs "RV"만 표시할지 결정(런타임 화면 폭 기준, 빌드 1개로 전 기기 적응).
+//! 가장 작은 기기(instinct2s 156 등)만 메인창이 좁아 그리드 불가 → "RV"만. 그 외(instinct2 176↑·
+//! fr55 208↑)는 그리드(폰트는 drawMetricGrid가 화면에 맞게 반응형 축소). 메트릭은 글래스로 가니
+//! 가장 작은 워치엔 필드 식별("RV")만 보이면 충분.
+function gridFitsScreen(width as Lang.Number) as Lang.Boolean {
+    return width >= 170;
 }
 
 //! sport 정수값으로부터 strategy 선택. 테스트 가능한 진입점.

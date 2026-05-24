@@ -139,6 +139,29 @@ function testMetricGridLayout_withinBounds(logger as Logger) as Boolean {
     return lx > 0 && rx < 416 && lx < rx && ty > 0 && r2 < 416;
 }
 
+(:test)
+function testMetricGridLayout_narrowDeviceRowsLower(logger as Logger) as Boolean {
+    // instinct 계열(폭<200, 보조창)은 행을 아래로(timeY 0.20), fr55(208)+는 위로(0.14).
+    // screenShape가 ROUND로 안 잡히는 instinct 때문에 isRound 무관하게 폭만으로 판별해야 함(회귀 방지).
+    var narrow = metricGridLayout(176, 176, false);   // instinct2 (round=false 보고)
+    var wide   = metricGridLayout(208, 208, true);    // fr55
+    return (narrow[:timeY] as Lang.Number) == (176 * 0.20).toNumber()   // 35
+        && (wide[:timeY]   as Lang.Number) == (208 * 0.14).toNumber()   // 29
+        && (metricGridLayout(199, 199, true)[:timeY] as Lang.Number) == (199 * 0.20).toNumber()   // 경계: <200 → 낮게
+        && (metricGridLayout(200, 200, false)[:timeY] as Lang.Number) == (200 * 0.14).toNumber(); // 경계: ≥200 → 높게
+}
+
+(:test)
+function testGridFitsScreen_onlySmallestShowsRV(logger as Logger) as Boolean {
+    // 가장 작은 기기(instinct2s 156)만 "RV", 나머지(instinct2 176↑·fr55 208↑)는 그리드. 경계 170.
+    return gridFitsScreen(156) == false      // instinct2s → RV
+        && gridFitsScreen(169) == false      // 경계 직전
+        && gridFitsScreen(170) == true       // 경계
+        && gridFitsScreen(176) == true       // instinct2 → 그리드
+        && gridFitsScreen(208) == true       // fr55 → 그리드
+        && gridFitsScreen(390) == true;      // fr165 → 그리드
+}
+
 // === RunningStrategy regression tests ===
 // 이 테스트들은 기존 러닝 모드 패킷이 한 비트도 안 바뀌었음을 보증한다.
 
