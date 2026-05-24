@@ -700,9 +700,9 @@ class RunVisionIQView extends WatchUi.DataField {
         var centerX = width / 2;
         var centerY = height / 2;
 
-        // 아주 작은 기기(Instinct 등 보조창형, width<200)는 메인창이 좁아 타이틀+상태+버전 3줄이
-        // 빡빡 → "RV"만 크게 중앙 표시. 메트릭·상태는 글래스로 가니 워치엔 필드 식별만 보이면 충분.
-        if (!gridFitsScreen(width)) {
+        // instinct은 데이터필드를 메인(156/176) + 보조창(54px) 두 번 렌더한다. 보조창(폭<100)은 너무
+        // 좁아 식별자 "RV"만. 메인(instinct2s 156 포함)은 아래의 RunVision+상태+버전 블록을 그린다.
+        if (width < 100) {
             dc.drawText(centerX, centerY, Graphics.FONT_LARGE, "RV",
                 Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
             return;
@@ -711,16 +711,32 @@ class RunVisionIQView extends WatchUi.DataField {
         // 타이틀(텍스트) — 모든 기기에서 로고 비트맵 대신 사용.
         // 로고(176x37 RGBA ≈26KB)는 작은 기기(fr55/instinct2s 등)의 DataField 메모리 예산을
         // 초과해 onUpdate 에서 OOM 크래시 → 텍스트 타이틀로 통일(메모리·기기 호환성 확보).
-        dc.drawText(centerX, centerY - 30, Graphics.FONT_MEDIUM, "RunVision", Graphics.TEXT_JUSTIFY_CENTER);
+        //
+        // 타이틀·상태·버전 3줄을 '폰트 높이 기반'으로 세로 중앙 정렬. 픽셀 하드코딩(centerY±30) 금지 —
+        // 큰 기기는 타이틀 폰트가 커서 상태와 겹쳤음(40-titleH<0). gap=titleH/2 로 타이틀↔상태 숨구멍
+        // (폰트 비례 → 기기 무관, 사용자 요청). 작은 기기(instinct2 176/fr55 208)도 블록이 화면에 fit.
+        var titleFont = Graphics.FONT_MEDIUM;
+        var titleH = dc.getFontHeight(titleFont);
+        var statusH = dc.getFontHeight(Graphics.FONT_SMALL);
+        var versionH = dc.getFontHeight(Graphics.FONT_XTINY);
+        var gap = titleH / 2;   // 타이틀↔상태 갭
+        var vGap = 4;           // 상태↔버전 (작게)
+        var blockH = titleH + gap + statusH + vGap + versionH;
+        // instinct(보조창, 폭<200)은 우상단 보조창이 중앙 정렬된 와이드 타이틀의 오른쪽 끝을 가림 →
+        // 블록을 보조창 아래(0.42h부터)로 내림. 그 외 기기는 세로 중앙 정렬.
+        var subWindow = (width < 200);
+        var topY = subWindow ? (height * 0.42).toNumber() : (centerY - blockH / 2);
 
-        // 상태 텍스트 (로고 아래)
+        dc.drawText(centerX, topY, titleFont, "RunVision", Graphics.TEXT_JUSTIFY_CENTER);
+
+        // 상태 텍스트
         var statusText = _isConnected ? "Connected" : _scanStatus;
-        var statusY = centerY + 10;
+        var statusY = topY + titleH + gap;
         dc.drawText(centerX, statusY, Graphics.FONT_SMALL, statusText, Graphics.TEXT_JUSTIFY_CENTER);
 
-        // 앱 버전 (상태 텍스트 바로 아래, 작고 흐리게) — 상태 글자 높이만큼 띄워 겹침 방지(기기·폰트 무관).
+        // 앱 버전 (상태 바로 아래, 작고 흐리게)
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        var versionY = statusY + dc.getFontHeight(Graphics.FONT_SMALL) + 4;
+        var versionY = statusY + statusH + vGap;
         dc.drawText(centerX, versionY, Graphics.FONT_XTINY, "v" + AppVersion.VALUE, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
