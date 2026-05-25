@@ -10,6 +10,11 @@ class RunningStrategy extends MetricStrategy {
         MetricStrategy.initialize();
     }
 
+    //! 기본 러닝 전송 주기. 일부 저속 allowlist 기기는 View 레벨에서 2초로 override 한다.
+    function getTransmitIntervalSeconds() as Lang.Number {
+        return 5;
+    }
+
     //! 메트릭 패킷을 순서대로 생성. valid 플래그가 false 인 메트릭은 패킷을 만들지 않는다.
     //! → iLens 가 stale 0 으로 갱신되지 않고 직전 유효값 유지.
     //! Sport Time 은 garmin timer 가 항상 정확하므로 무조건 전송.

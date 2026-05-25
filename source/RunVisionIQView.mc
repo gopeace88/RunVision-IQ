@@ -37,13 +37,6 @@ class RunVisionIQView extends WatchUi.DataField {
     private var _lastScanResult as BluetoothLowEnergy.ScanResult or Null;  // 마지막 연결 기기 정보
     private var _charRetryCount as Lang.Number = 0;  // Characteristic 검색 재시도 카운터
 
-    // Debug logs - BLE와 TX 분리 (각 4줄)
-    // ✅ DEBUG MODE: 로그 배열 크기 8로 증가 (4→8)
-    private var _bleDebugLogs as Lang.Array<Lang.String> = ["", "", "", "", "", "", "", ""];
-    private var _txDebugLogs as Lang.Array<Lang.String> = ["", "", "", "", "", "", "", ""];
-    private var _bleLogIndex as Lang.Number = 0;
-    private var _txLogIndex as Lang.Number = 0;
-
     // Display labels
     private var _speedLabel as Lang.String = "---";
     private var _hrLabel as Lang.String = "---";
@@ -52,13 +45,6 @@ class RunVisionIQView extends WatchUi.DataField {
     private var _timeLabel as Lang.String = "0:00";
     private var _paceLabel as Lang.String = "--:--";
     private var _altitudeLabel as Lang.String = "---";  // 사이클 현재 고도(m) — 글래스 전송값(cadence슬롯 0x0E)과 동일
-
-    // Statistics tracking
-    private var _totalSpeed as Lang.Float = 0.0;
-    private var _speedSamples as Lang.Number = 0;
-    private var _avgSpeedLabel as Lang.String = "---";
-    private var _maxHeartRate as Lang.Number = 0;
-    private var _maxHrLabel as Lang.String = "---";
 
     // Profile registration tracking (ActiveLook 방식)
     private var _profileRegistered as Lang.Boolean = false;
@@ -74,7 +60,7 @@ class RunVisionIQView extends WatchUi.DataField {
     private var _userWeight as Lang.Float = 70.0;          // 사용자 체중 (kg, 기본값 70kg)
     private var _weightInitialized as Lang.Boolean = false;  // 체중 초기화 플래그
 
-    // Write Queue (Flutter 방식: 2초마다 모든 메트릭 순차 전송)
+    // Write Queue: 전송 주기마다 모든 메트릭을 순차 전송
     private var _writeQueue as Lang.Array<Lang.ByteArray> = [] as Lang.Array<Lang.ByteArray>;
     private var _isWriting as Lang.Boolean = false;  // Write 진행 중 플래그
     private var _computeCount as Lang.Number = 0;    // compute() 호출 횟수 (전송 주기 제어)
@@ -105,7 +91,6 @@ class RunVisionIQView extends WatchUi.DataField {
     // === 사이클/러닝 모드 분기 (Strategy 패턴) ===
     private var _strategy as MetricStrategy or Null = null;
     private var _metricValues as MetricValues or Null = null;
-
     // 스캔 타임아웃: 2-retry + 새 기기 등록 모드
     private var _scanStartTime as Lang.Number = 0;           // 스캔 시작 시간 (ms)
     private var _savedDeviceScanAttempts as Lang.Number = 0; // 저장된 기기 탐색 시도 횟수
@@ -146,10 +131,8 @@ class RunVisionIQView extends WatchUi.DataField {
             }
 
             _scanStatus = "INIT_OK";
-            addBleLog("READY");
         } catch (ex) {
             _scanStatus = "INIT_ERR";
-            addBleLog("ERR:init");
         }
 
         _metricValues = new MetricValues();
@@ -167,7 +150,6 @@ class RunVisionIQView extends WatchUi.DataField {
                 while (device != null) {
                     try {
                         BluetoothLowEnergy.unpairDevice(device);
-                        addBleLog("UNPAIR");
                     } catch (ex) {
                         // 무시
                     }
@@ -180,36 +162,11 @@ class RunVisionIQView extends WatchUi.DataField {
                 BluetoothLowEnergy.registerProfile(getExerciseProfile());
                 BluetoothLowEnergy.setScanState(BluetoothLowEnergy.SCAN_STATE_SCANNING);
                 _scanStatus = "SCANNING";
-                addBleLog("SCAN");
             } catch (ex) {
                 _scanStatus = "SCAN_ERR";
-                addBleLog("ERR:scan");
             }
         } catch (ex) {
             _scanStatus = "ERR:init";
-            addBleLog("ERR:init");
-        }
-    }
-
-    //! Add BLE debug log (최대 8줄, 순환) - DEBUG MODE
-    public function addBleLog(msg as Lang.String) as Void {
-        _bleDebugLogs[_bleLogIndex] = msg;
-        _bleLogIndex = (_bleLogIndex + 1) % 8;
-        try {
-            WatchUi.requestUpdate();
-        } catch (e) {
-            // UI가 아직 준비되지 않았을 수 있음
-        }
-    }
-
-    //! Add TX debug log (최대 8줄, 순환) - DEBUG MODE
-    private function addTxLog(msg as Lang.String) as Void {
-        _txDebugLogs[_txLogIndex] = msg;
-        _txLogIndex = (_txLogIndex + 1) % 8;
-        try {
-            WatchUi.requestUpdate();
-        } catch (e) {
-            // UI가 아직 준비되지 않았을 수 있음
         }
     }
 
@@ -217,8 +174,6 @@ class RunVisionIQView extends WatchUi.DataField {
     function onTimerStart() as Void {
         // DFLogger.reset();
         // DFLogger.log("=== Activity Started ===");
-
-        addBleLog("START");
 
         // Passive Connection: 페어링된 기기 확인
         if (!_isConnected) {
@@ -232,7 +187,6 @@ class RunVisionIQView extends WatchUi.DataField {
     function onTimerStop() as Void {
         // Stop scanning (BLE Scanner 방식)
         BluetoothLowEnergy.setScanState(BluetoothLowEnergy.SCAN_STATE_OFF);
-        addBleLog("STOP");
     }
 
     //! Called when activity is paused
@@ -252,12 +206,6 @@ class RunVisionIQView extends WatchUi.DataField {
 
     //! Called when activity is reset
     function onTimerReset() as Void {
-        // Reset statistics
-        _totalSpeed = 0.0;
-        _speedSamples = 0;
-        _maxHeartRate = 0;
-        _avgSpeedLabel = "---";
-        _maxHrLabel = "---";
         _paceLabel = "--:--";
         _distanceLabel = "0.00";
         _timeLabel = "0:00";
@@ -283,9 +231,7 @@ class RunVisionIQView extends WatchUi.DataField {
                 _profileRegistered = false;
                 BluetoothLowEnergy.registerProfile(getExerciseProfile());
                 _scanStatus = "RESCAN";
-                addBleLog("RESCAN");
             } catch (ex) {
-                addBleLog("ERR:rescan");
             }
         }
 
@@ -295,7 +241,6 @@ class RunVisionIQView extends WatchUi.DataField {
             var pairingDuration = System.getTimer() - _pairingStartTime;
             if (pairingDuration >= PAIRING_TIMEOUT_MS) {
                 _pairingRetryCount++;
-                addBleLog("PAIR_TO:" + _pairingRetryCount);  // Pairing Timeout + retry count
                 _pairingStartTime = 0;
 
                 try {
@@ -312,7 +257,6 @@ class RunVisionIQView extends WatchUi.DataField {
                     // 3회 실패 → CONN_ERR
                     _scanStatus = "CONN_ERR";
                     _pairingRetryCount = 0;
-                    addBleLog("CONN_ERR");
                 } else {
                     // 재시도: 즉시 다시 pairing
                     _scanStatus = "RETRY " + _pairingRetryCount;
@@ -351,24 +295,20 @@ class RunVisionIQView extends WatchUi.DataField {
                         }
                         _savedDeviceScanAttempts = 0;
                         _scanStartTime = System.getTimer();  // 새 타임아웃 윈도우
-                        addBleLog("NEW_DEV");
                         _scanStatus = "NEW_DEV";
                     } else if (savedDevice == null && _savedDeviceScanAttempts >= 2) {
                         // 새 기기 등록 모드 또는 최초 실행 2회 실패 → 에러
                         _scanStatus = "SCAN_FAIL";
                         _savedDeviceScanAttempts = 0;
-                        addBleLog("SCAN_FAIL");
                     } else {
                         // 1차 실패 → 재시도 (스캔 계속 유지)
                         _scanStartTime = System.getTimer();
-                        addBleLog("SCAN_TO:" + _savedDeviceScanAttempts);
                     }
 
                     WatchUi.requestUpdate();
                 } catch (ex) {
                     _scanStartTime = 0;
                     _savedDeviceScanAttempts = 0;
-                    addBleLog("SCAN_ERR");
                 }
             }
         }
@@ -397,7 +337,6 @@ class RunVisionIQView extends WatchUi.DataField {
 
                 if (_reconnectAttempts <= RECONNECT_FAST_MAX && _lastScanResult != null) {
                     // 1-5회: 단순 재연결 시도 (빠름)
-                    addBleLog("RE:" + _reconnectAttempts);
                     _scanStatus = "RECONN " + _reconnectAttempts;
                     try {
                         _pairingStartTime = System.getTimer();  // ✅ 타임아웃 추적 시작
@@ -412,7 +351,6 @@ class RunVisionIQView extends WatchUi.DataField {
                     }
                 } else {
                     // 6회 이후: unpair 후 새로 스캔
-                    addBleLog("RESCAN:" + _reconnectAttempts);
                     _scanStatus = "RESCAN";
                     try {
                         // 기존 bonding 삭제 (FR55 호환성: has 연산자로 확인)
@@ -443,7 +381,6 @@ class RunVisionIQView extends WatchUi.DataField {
                     3  // 3번 동기 재시도
                 );
                 _charRetryCount = 0;  // 성공 시 리셋
-                addBleLog("CHAR OK");
                 _scanStatus = "READY";
             } catch (ex) {
                 _charRetryCount++;
@@ -453,7 +390,6 @@ class RunVisionIQView extends WatchUi.DataField {
                     _isConnected = false;
                     _connectedDevice = null;
                     _scanStatus = "RECONN...";
-                    addBleLog("RECONN");
                     // ❗ 재연결 게이트(line ~375)는 _needsReconnect를 요구함. disconnect 핸들러와
                     //    동일하게 arming하지 않으면 _needsReconnect=false라 재연결이 영영 안 돌고
                     //    영구 disconnect 상태로 고착됨.
@@ -495,12 +431,6 @@ class RunVisionIQView extends WatchUi.DataField {
             // iLens 전송용: Pace를 총 초로 변환 (예: 4:25 → 265초)
             // iLens 펌웨어가 60으로 나눠서 표시: 265 / 60 = 4.42
             paceSeconds = paceMin * 60 + paceSec;
-
-            // Update average speed
-            _totalSpeed += speedMs * 3.6;
-            _speedSamples++;
-            var avgSpeed = (_totalSpeed / _speedSamples).toNumber();
-            _avgSpeedLabel = avgSpeed.format("%d");
         } else {
             _speedLabel = "0";
             _paceLabel = "--:--";
@@ -511,12 +441,6 @@ class RunVisionIQView extends WatchUi.DataField {
         var hrValid = hr != null && hr > 0;
         if (hrValid) {
             _hrLabel = hr.format("%d");
-
-            // Track max heart rate
-            if (hr > _maxHeartRate) {
-                _maxHeartRate = hr;
-                _maxHrLabel = hr.format("%d");
-            }
         } else {
             _hrLabel = "---";
             hr = 0;
@@ -616,21 +540,23 @@ class RunVisionIQView extends WatchUi.DataField {
         var secs = _elapsedSeconds % 60;
         _timeLabel = minutes.format("%d") + ":" + secs.format("%02d");
 
-        // ========== iLens 전송: Queue 방식 (Flutter와 동일) ==========
-        // 5초마다 모든 메트릭을 queue에 추가 → 순차 전송
-        // iLens는 WRITE_WITH_RESPONSE만 지원 → onCharacteristicWrite() callback에서 다음 패킷 전송
+        // ========== iLens 전송: Queue 방식 ==========
+        // 주기마다 모든 메트릭을 queue에 추가 → 순차 전송
+        // iLens는 write 완료 콜백 기반으로 다음 패킷을 이어 보낸다.
         _computeCount++;
-        var transmitInterval = (_strategy != null) ? _strategy.getTransmitIntervalSeconds() : 5;
+        if (_strategy == null) {
+            _strategy = detectStrategy(info);
+        }
+
+        var transmitInterval = (_strategy != null) ? (_strategy as MetricStrategy).getTransmitIntervalSeconds() : 5;
+        if (isSlowBleAllowlistDevice()) {
+            transmitInterval = 1;
+        }
         if (_isConnected && _exerciseCharacteristic != null && _computeCount % transmitInterval == 0) {
             try {
                 // 1. Write 진행 중이 아닐 때만 queue 초기화
                 if (!_isWriting) {
                     _writeQueue = [] as Lang.Array<Lang.ByteArray>;
-
-                    // Strategy 초기화 (첫 호출 시 단 한 번)
-                    if (_strategy == null) {
-                        _strategy = detectStrategy(info);
-                    }
 
                     // MetricValues 채우기 (compute() 내에서 이미 계산된 값들 복사)
                     _metricValues.elapsedSeconds = _elapsedSeconds;
@@ -661,12 +587,10 @@ class RunVisionIQView extends WatchUi.DataField {
                     // DFLogger.log("[TX] pace=" + paceSeconds + " hr=" + hr + " cad=" + cadence + " pwr=" + power);
 
                     // 화면에 핵심 메트릭만 표시
-                    addTxLog("P:" + _paceLabel + " T:" + _timeLabel);
 
                     processWriteQueue();
                 }
             } catch (ex) {
-                addTxLog("q:err");
                 // DFLogger.logError("QUEUE", "Queue error");
             }
         }
@@ -818,7 +742,6 @@ class RunVisionIQView extends WatchUi.DataField {
         _isWriting = false;
 
         if (status != BluetoothLowEnergy.STATUS_SUCCESS) {
-            addTxLog("ERR:wr");
             _scanStatus = "WRITE_ERR";
             _writeQueue = [] as Lang.Array<Lang.ByteArray>;
             return;
@@ -833,10 +756,8 @@ class RunVisionIQView extends WatchUi.DataField {
             if (elapsed > SLOW_DEVICE_THRESHOLD_MS) {
                 // 느린 기기 → DEFAULT 모드로 전환
                 _useDefaultWrite = true;
-                addBleLog("MODE:DEFAULT");
             } else {
                 // 빠른 기기 → WITH_RESPONSE 유지
-                addBleLog("MODE:RESPONSE");
             }
         }
 
@@ -872,7 +793,6 @@ class RunVisionIQView extends WatchUi.DataField {
             _scanStartTime = 0;           // 스캔 타임아웃 추적 종료
             _savedDeviceScanAttempts = 0; // 스캔 시도 횟수 리셋
             _scanStatus = "CONNECTED";
-            addBleLog("CONN OK");
             // DFLogger.logBle("CONNECTED", "Device connected");
         } else {
             _isConnected = false;
@@ -888,14 +808,12 @@ class RunVisionIQView extends WatchUi.DataField {
             _writeStartTime = 0;
             _speedDetected = false;
             _scanStatus = "DISCONN";
-            addBleLog("DISCONN");
 
             // Auto-reconnect 시작
             if (_autoReconnectEnabled) {
                 _needsReconnect = true;
                 _lastReconnectTime = _elapsedSeconds;
                 _isReconnecting = false;
-                addBleLog("RECONN..");
             }
         }
 
@@ -925,30 +843,24 @@ class RunVisionIQView extends WatchUi.DataField {
             if (service == null) {
                 service = dev.getService(serviceUuid);  // ← Service 재시도
                 if (service == null) {
-                    System.println("[RETRY " + i + "] Service still null");
                 } else {
-                    System.println("[RETRY " + i + "] Service found!");
                 }
             } else {
                 var characteristic = service.getCharacteristic(characteristicUuid);
                 if (characteristic != null) {
                     // ✅ 성공 시 즉시 리턴
-                    System.println("tryGetServiceCharacteristic: success at retry " + i);
                     return characteristic;
                 } else {
-                    System.println("[RETRY " + i + "] Service OK but Char null");
                 }
             }
         }
 
         // ✅ nbRetry번 실패 시 예외 발생
         if (service == null) {
-            System.println("FINAL: Service is NULL");
             throw new Lang.InvalidValueException(
                 "(E) Could not get service after " + nbRetry + " retries"
             );
         }
-        System.println("FINAL: Service OK but Characteristic is NULL");
         throw new Lang.InvalidValueException(
             "(E) Could not get characteristic after " + nbRetry + " retries"
         );
@@ -978,9 +890,29 @@ class RunVisionIQView extends WatchUi.DataField {
 
             _exerciseCharacteristic.requestWrite(packet, {:writeType => writeType});
         } catch (ex) {
-            addTxLog("ERR:tx");
             _isWriting = false;
         }
+    }
+
+    //! 실기기/저사양군 allowlist.
+    //! 이 기기들은 러닝/사이클 모두 1초를 사용한다.
+    private function isSlowBleAllowlistDevice() as Lang.Boolean {
+        var settings = System.getDeviceSettings();
+        if (!(settings has :partNumber) || settings.partNumber == null) {
+            return false;
+        }
+        var partNumber = settings.partNumber as Lang.String;
+        return
+            partNumber.equals("006-B3282-00") ||  // fr45
+            partNumber.equals("006-B3469-00") ||  // fr45
+            partNumber.equals("006-B3847-00") ||  // fr45
+            partNumber.equals("006-B3405-00") ||  // garminswim2
+            partNumber.equals("006-B3639-00") ||  // garminswim2
+            partNumber.equals("006-B3889-00") ||  // instinct2s
+            partNumber.equals("006-B4091-00") ||  // instinct2s
+            partNumber.equals("006-B3869-00") ||  // fr55
+            partNumber.equals("006-B4033-00") ||  // fr55
+            partNumber.equals("006-B4838-00");    // fr55
     }
 
     //! Called when descriptor read completes
@@ -1001,7 +933,6 @@ class RunVisionIQView extends WatchUi.DataField {
 
             try {
                 BluetoothLowEnergy.setScanState(BluetoothLowEnergy.SCAN_STATE_SCANNING);
-                addBleLog("SCANNING");
             } catch (ex) {
                 _scanStatus = "SCAN_ERR";
             }
@@ -1015,8 +946,6 @@ class RunVisionIQView extends WatchUi.DataField {
     //! Called when rLens device is found during scanning
     function onScanResult(scanResult as BluetoothLowEnergy.ScanResult) as Void {
         try {
-            addBleLog("FOUND");
-            System.println("iLens found, RSSI=" + scanResult.getRssi());
 
             // Save device name on first connection (device name = serial number)
             if (Application.Storage.getValue("savedRLensName") == null) {
@@ -1040,7 +969,6 @@ class RunVisionIQView extends WatchUi.DataField {
                         }
                         var deviceName = rawStr.substring(idx, nameEnd);
                         Application.Storage.setValue("savedRLensName", deviceName);
-                        System.println("Saved rLens device: " + deviceName);
                     }
                 }
             }
@@ -1052,7 +980,6 @@ class RunVisionIQView extends WatchUi.DataField {
 
                 BluetoothLowEnergy.setScanState(BluetoothLowEnergy.SCAN_STATE_OFF);
 
-                addBleLog("PAIRING");
                 _pairingStartTime = System.getTimer();
                 _connectedDevice = BluetoothLowEnergy.pairDevice(scanResult);
 
@@ -1066,7 +993,6 @@ class RunVisionIQView extends WatchUi.DataField {
 
             WatchUi.requestUpdate();
         } catch (ex) {
-            addBleLog("SCAN_EX");
         }
     }
 
@@ -1164,7 +1090,6 @@ class RunVisionBleDelegate extends BluetoothLowEnergy.BleDelegate {
                 r = results.next() as BluetoothLowEnergy.ScanResult;
             }
         } catch (ex) {
-            _view.addBleLog("SCAN_EX");
         }
     }
 
@@ -1174,7 +1099,6 @@ class RunVisionBleDelegate extends BluetoothLowEnergy.BleDelegate {
     }
 
     function onConnectedStateChanged(device as BluetoothLowEnergy.Device, state as BluetoothLowEnergy.ConnectionState) as Void {
-        _view.addBleLog("ST:" + state);
         _view.onConnectedStateChanged(device, state);
     }
 
