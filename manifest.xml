@@ -21,6 +21,21 @@
             <!-- 업데이트: 2026-01-20                                       -->
             <!-- ========================================================= -->
 
+            <!-- ==================== Edge Series (자전거 컴퓨터) — BLE Central 지원 ==================== -->
+            <!-- 시뮬레이터 런타임 검증 완료(BLE Central OK). edge130/130plus/520/820/explore 1세대는
+                 BLE 미지원(init 크래시)이라 제외. 세로형 대형(1040/1050)은 NUMBER 폰트로 큰 숫자 렌더. -->
+            <iq:product id="edge530"/>
+            <iq:product id="edge540"/>
+            <iq:product id="edge830"/>
+            <iq:product id="edge840"/>
+            <iq:product id="edge1030"/>
+            <iq:product id="edge1030plus"/>
+            <iq:product id="edge1040"/>
+            <iq:product id="edge1050"/>
+            <iq:product id="edge850"/>
+            <iq:product id="edgeexplore2"/>
+            <iq:product id="edgemtb"/>
+
             <!-- ==================== Forerunner Series ==================== -->
             <!-- 러닝 워치 - PRIMARY TARGET -->
 

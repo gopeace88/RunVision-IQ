@@ -152,6 +152,18 @@ function testMetricGridLayout_narrowDeviceRowsLower(logger as Logger) as Boolean
 }
 
 (:test)
+function testMetricGridLayout_tallPortraitSpreadsRows(logger as Logger) as Boolean {
+    // 세로로 긴 화면(Edge1040 282x470, h/w=1.66>1.38)은 행을 더 펼침(timeY 0.08 / row2Y 0.72)
+    // → 큰 숫자 폰트 수용 + 하단 채움. edge540(322/246=1.30)·venusq2m(360/320=1.125)는 미해당(0.10/0.67).
+    var tall = metricGridLayout(282, 470, false);   // edge1040
+    var mid  = metricGridLayout(246, 322, false);   // edge540 (비-세로형)
+    return (tall[:timeY] as Lang.Number) == (470 * 0.08).toNumber()
+        && (tall[:row2Y] as Lang.Number) == (470 * 0.72).toNumber()
+        && (mid[:timeY]  as Lang.Number) == (322 * 0.10).toNumber()   // 일반 배치
+        && (mid[:row2Y]  as Lang.Number) == (322 * 0.67).toNumber();
+}
+
+(:test)
 function testGridFitsScreen_onlySmallestShowsRV(logger as Logger) as Boolean {
     // 가장 작은 기기(instinct2s 156)만 "RV", 나머지(instinct2 176↑·fr55 208↑)는 그리드. 경계 170.
     return gridFitsScreen(156) == false      // instinct2s → RV

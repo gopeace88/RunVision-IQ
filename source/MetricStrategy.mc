@@ -76,9 +76,13 @@ function metricPresent(value as Lang.Number or Lang.Float or Null) as Lang.Boole
 function metricGridLayout(width as Lang.Number, height as Lang.Number, isRound as Lang.Boolean) as Lang.Dictionary {
     var inset = isRound ? 0.30 : 0.25;
     var subWindow = (width < 200);  // instinct 계열 추정(보조창 + 좁은 메인창; 폭만으로)
-    var timeF = subWindow ? 0.20 : 0.10;
-    var row1F = subWindow ? 0.45 : 0.385;
-    var row2F = subWindow ? 0.70 : 0.67;
+    // 세로로 긴/큰 화면(Edge 1040·1050·1030·850·explore2 등): 행을 더 펼쳐 큰 숫자 폰트 수용 + 하단 채움.
+    // 임계 1.38 — edge850(600/420=1.42)까지 포함, edgemtb(1.33)·edge540(1.30)·venusq2m(1.13)·워치(1.0)는
+    // 해당 없음 → 기존 배치 유지(regression 0).
+    var tallPortrait = (height * 100 / width) > 138;
+    var timeF = subWindow ? 0.20 : (tallPortrait ? 0.08 : 0.10);
+    var row1F = subWindow ? 0.45 : (tallPortrait ? 0.40 : 0.385);
+    var row2F = subWindow ? 0.70 : (tallPortrait ? 0.72 : 0.67);
     return {
         :centerX => width / 2,
         :leftX  => (width * inset).toNumber(),
