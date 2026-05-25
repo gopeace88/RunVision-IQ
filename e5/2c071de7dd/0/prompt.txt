@@ -1,0 +1,503 @@
+pull->build, test -> 배포 이런식이구나
+
+---
+
+네, 전부 pull 하고 가민부터 빌드해주세요
+
+---
+
+지금 소스만 양쪽시스템(wsl, mac) 에서 repo 로 동기화하면 되는데, 빌드산출물마저 repo 에 있다는 말인가?
+
+---
+
+다른세션에서  이슈가 나왔다. 세 워치 어드버서리얼 완료. Garmin·Apple Watch는 approve(무결함), Galaxy는 [high] 1건 — 그리고 이건 보류 대상이 아니라 고쳐야 할 진짜 결함으로 봅니다.
+
+  결과
+
+  ┌───────────────────┬────────────────────┬───────────────────────────────────┐
+  │       워치        │      Verdict       │               평가                │
+  ├───────────────────┼────────────────────┼───────────────────────────────────┤
+  │ Garmin (N4)       │ ✅ approve         │ 무결함                            │
+  ├───────────────────┼────────────────────┼───────────────────────────────────┤
+  │ Apple Watch (F12) │ ✅ approve         │ 무결함 (런타임 smoke test만 권장) │
+  ├───────────────────┼────────────────────┼───────────────────────────────────┤
+  │ Galaxy            │ ⚠️ needs-attention │ [high] stale GATT 콜백 race       │
+  └───────────────────┴────────────────────┴───────────────────────────────────┘
+
+  Galaxy [high] — 제 솔직한 판단: 고쳐야 함
+
+  finding: 직렬화(handler.post)는 콜백을 메인으로 모았지만, 콜백의 gatt 파라미터가 현재 gatt 필드와 같은지 확인하지 않습니다. connect()가 옛 gatt를 close하고 새
+  gatt로 교체한 뒤, 옛 인스턴스의 늦은 콜백이 메인에 도착해 실행되면 → exerciseCharacteristic 클리어 + DISCONNECTED publish + reconnect 예약 → 그 reconnect가 새
+  건강한 gatt를 close → false disconnect/reconnect 루프.
+
+  왜 이건 보류가 아니라 수정 대상인가 (다른 보류 항목들과 다름):
+  1. 인지된 Android BLE race 패턴 — 추정적 방어가 아니라 교과서적 결함. 모든 BLE 코드가 gatt 동일성 가드를 두는 이유가 이것.
+  2. 제가 건드린 바로 그 경로 — 게다가 handler.post가 콜백 실행을 지연시켜 stale 창을 오히려 넓혔을 수 있습니다.
+  3. 재연결은 현장에서 실제로 일어나는 경로 (운동 중 BLE 끊김) — 미관측 이론 엣지케이스가 아님.
+  4. 표준·저위험 수정: 각 posted 콜백 맨 앞에 if (gatt !== this@RLensConnection.gatt) return@post 가드 추가.
+
+  reconcile: 앞선 Claude 홀리스틱 재감사는 "gatt?.close()가 stale 콜백을 막아 safe"라 했지만 — close()는 이후 콜백을 막을 뿐, 이미 큐잉된/in-flight 콜백은 못
+  막습니다. codex 리뷰어가 그 점을 더 정확히 짚었습니다.
+
+  → 이 가드를 추가하는 걸 권합니다. (3개 콜백에 동일성 체크 한 줄씩.) 진행할까요?
+
+---
+
+다시 pull 해야죠
+
+---
+
+가민만 최신버전으로 빌드해서 테스트하고 싶다.
+
+---
+
+당신은 지금 wsl 상에 있는데 윈도우즈에 연결된 fr165에 삭제후 인스톨할수있나? 나는 캐쉬가 남는게 싫다.
+
+---
+
+연결함
+
+---
+
+다시 해봐라. MTP 이다
+
+---
+
+쩝....내가 직접해야겠군...
+
+---
+
+앞으로 빌드는 RunVisionIQ.prg 로 최종출력해라. 이름 이상하게 바꾸지 마라..찾기귀찮다.
+
+---
+
+아...정말싫다...사이드이펙트 없게 해달라고 그렇게 얘기했는데...많이 생겼다. 1. 페이스, 케이던스, 거리 가 멈췄을때 이전값으로 표시된다. 1.페이스가 한번 멈추고나면 다시는 업데이트안되고 이전값으로 계속 남아있다.  3. 다른 어떤 사이드 이펙트가 있는지 모르겠지만 정말 어처구니가 없다. 지금까지 시간을 들여서 테스팅한것들을 전부다 다시 해봐야하나?
+
+---
+
+멈추어서면 속도, 페이스, 케이던스가 당연히 0으로 되어야죠...왜 이전값이 되어야하나요...이것부터 이상해요.... 페이스는 다시뛱어도 직전값 고정되서 안바뀐다.
+
+---
+
+이 문제들이 다른 워치에도 있지않을까?
+
+---
+
+두 증상 다 valid-skip이 원인일 가능성이 높습니다:
+
+  - 증상 1: 멈추면 skip → 직전값 유지 (확정).
+  - 증상 2 (페이스 영영 고정): 이게 핵심인데 — 예전 코드는 velocity 패킷을 항상 보냈고(멈춰도 pace=0), 그래서 잘 됐습니다. 지금은 멈추면 velocity 패킷이 끊깁니다.
+  의심: 글래스 펌웨어가 velocity 패킷이 끊긴 뒤, 재개돼도 pace 필드를 다시 안 살리는 latch가 있을 수 있습니다. (watch 코드는 대칭이라 latch가 없는데 페이스만 안
+  돌아오는 것 → latch가 펌웨어 쪽이면 정확히 설명됨. cadence는 안 끊겨서 멀쩡.)
+    - 즉 "예전엔 됐다(항상 전송) ↔ 지금 안 됨(skip)"의 차이가 바로 이 skip이고, skip을 없애면 펌웨어가 velocity를 계속 받아 latch가 안 생김.
+
+  → 정적 분석으로 watch 코드 latch를 못 찾은 게 당연합니다. latch는 watch 코드가 아니라 "skip이 유발한 펌웨어 상태" 일 가능성. 그래서 올바른 수정(항상 실제값
+  전송)이 두 증상을 다 잡습니다.
+
+  수정 방향 (그대로 유효, 오히려 더 확신)
+
+  "활동 중 + 연결됨이면 velocity 패킷을 항상 전송(멈추면 0 포함), skip은 재연결/no-data로만 좁힘" → 멈춤 0 표시 + 펌웨어 latch 방지(항상 받으니) + 50844a5 보존.
+  예전에 잘 됐던 always-send 동작으로 사실상 복귀하되, 재연결-0-덮어쓰기만 정확히 막는 형태.
+
+  진행
+
+  - 수정은 Linux 세션이 단독으로 (정식 빌드 환경 + 50844a5 컨텍스트, 이미 깊이 진입). 저는 편집 안 하고 교차검증만.
+  - 그 세션의 TDD 계획(실패 테스트 → skip 범위 축소 → FR165 재빌드 → 재테스트)에 동의. 재테스트에서 멈춤→0 + 재개→회복이 확인되면 종결.
+
+---
+
+A.
+
+---
+
+경사도, 파워 등은 지금은 안쓰는 데이터필드이다.
+
+---
+
+이제 잘된다. 무엇을 고쳤는지 설명하고 필요없는 파일들 수정후에 커밋푸쉬해서 맥 세션이 볼수있도록 하자.
+
+---
+
+runvision repo 에 맥에서 애플와치를 수정해서 넣었다 pull 해서 확인해라
+
+---
+
+세 워치 모두 빌드할때마다 버전이 업되면 안된다. 명시적으로 배포하겠다고 내가 얘기하면 그때 직전 배포 버전을 확인해서 사용자에게 업하는 버전번호와 빌드번호를 확인받아서 배포해야하는거다.
+
+---
+
+애플세션이 수정했다. 풀해서 확인하라
+
+---
+
+데이터필드 레이아웃같은데... 흠...예전에도 이것때문에 경과시간, 페이스, 케이던스, 거리, 심박수를 화면에 표시하려다가 못했던것 같다.
+
+---
+
+이미 런비전 단일 필드이다.
+
+---
+
+지금 앱을 지우고 다시 깔아서 해보니, IQ... 로고가 뜬다. 버전을 뿌리면서 뭔가 잘못된건가보다.
+
+---
+
+1번 화면임
+
+---
+
+yml 파일 없다. bak 파일만 있다.
+
+---
+
+---
+Error: Unhandled Exception
+Time: 2026-05-04T04:16:45Z
+Part-Number: 006-B4432-00
+Firmware-Version: '27.10'
+Language-Code: kor
+ConnectIQ-Version: 5.2.0
+Filename: RunVisionIQ
+Appname: 'RunVision-IQ'
+Stack: 
+  - pc: 0x1000194a
+    File: '\\wsl.localhost\Ubuntu-24.04\home\jhkim\00.Projects\00.RunVision\runvision-iq\source\RunVisionIQView.mc'
+    Line: 886
+    Function: onScanResult
+  - pc: 0x10000310
+    File: '\\wsl.localhost\Ubuntu-24.04\home\jhkim\00.Projects\00.RunVision\runvision-iq\source\RunVisionIQView.mc'
+    Line: 992
+    Function: onScanResults
+
+---
+
+이건 5월4일건데?
+
+---
+
+지금 데이터필드 변경화면에서도 runvision 은 iq 로그로만 나온다 . 화면 렌더링 문제다....
+
+---
+
+계속해봐라. 그렇지만 버전을 넣기전 버전은 잘 동작했었다. 그래서 내가 버그찾아서 수정했잖아
+
+---
+
+시뮬레이터 리로드해봐라
+
+---
+
+버전이 너무밑에 내려가있는데?
+
+---
+
+됬다. 실기기에서 잘보인다. 그럼 데이터필드도 표시가능한거 아니냐? 이것은 다른 문제냐? 배터리 소모도 많나?
+
+---
+
+일단 커밋 푸시하죠
+
+---
+
+이제 데이터필드를 표시하는것을 어떻게 하는게 좋을까? 화면을 애플이나 갤럭시처럼 배치할수는 없잖아요. 가민은 정지, 일시멈춤 버튼을 표시할 필요도 없고요. 제안해보세요
+
+---
+
+사이클은 현재고도를 사용한다. 총상승은 사용하지 않는다. 연결점은 초록이 좋겠다. 그런데, 다른 모든 기기와 호환이 되거나 기기별로 맞춤형 표시가 되어야하는데 가능할까? 가민엣지도 지원해야할텐데...
+
+---
+
+1번.   이번작업은 큰변화이므로 주의해라
+
+---
+
+진행
+
+---
+
+사이클모드에서 고도가 계산시에만 쓰이는건아니죠? 지금 기기에 전송이 되고있는데요...
+
+---
+
+1번 실행방식으로 진행해주세요. 화면 배치와 디자인 스마트하게 해주세요. 지저분하면 안되요. 글자간격, 줄맞춤 다 주의하세요.
+
+---
+
+2번 실행방식으로 진행해주세요. 화면 배치와 디자인 스마트하게 해주세요. 지저분하면 안되요. 글자간격, 줄맞춤 다 주의하세요.
+
+---
+
+연결상태 점 빼라. 지금 밑에가 짤린다. 이것을 빼면 좀 더 좋아보이겠다
+
+---
+
+시간 -> PACE, CAD  -> PACE, CAD  값 표시 -> DIST, HR -> DIST, HR 값 표시  이렇게 배치하고 각 라벨은 수치의 절반이하로 작게 표시해야한다.
+
+---
+
+시간 -> PACE, CAD  -> PACE, CAD  값 표시 -> DIST, HR -> DIST, HR 값 표시  이렇게 배치하고 각 라벨은 수치의 절반이하로 작게 표시해야한다. 지금 DIST 의 0.00 값이 라벨과 겹치고 있다. 전체적으로 폰트 사이즈를 더 줄여야한다. 시간도 더줄여도 된다.
+
+---
+
+값은 더 키워도 되겠는데 기기 연결도 안됬는데 바로 메인화면이 나오네
+
+---
+
+화면을 좀더 위로 올려라. 짤림은 없는데 균형이 좀 아래로 처진것 같다
+
+---
+
+자전거 모드도 라벨이 똑같네, 자전거모드는 페이스대신 속도, 케이던스대신 고도가 표시되어야하는데 이렇게 되어있나?
+
+---
+
+지금 실기기에서 테스트한거다. 실기기에서 두 화면이 동일하게 나왔다
+
+---
+
+이제 잘나온다. 줄같은거 넣을필요없겠죠? 지금 깔끔한거죠?
+
+---
+
+실기기로 확인다했다. 푸쉬해도 된다. 고생했다.
+
+---
+
+/codex:adversarial-review  방금 수정한 가민 화면 관련된 코드를 리뷰해봐라.
+
+---
+
+<task-notification>
+<task-id>bkg4hzakc</task-id>
+<tool-use-id>toolu_01FRSLo2ZpnQFQnwiwdKNE3c</tool-use-id>
+<output-file>/tmp/claude-1000/-home-jhkim-00-Projects-00-RunVision/567062c2-d6ea-4f97-8e3b-a1cc8e5292ac/tasks/bkg4hzakc.output</output-file>
+<status>completed</status>
+<summary>Background command "Codex adversarial review" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+진짜 문제냐?
+
+---
+
+작은기기폰트에서는 그리드 화면을 생략해버릴까? .... 일단 fr55, instinct2s 는 시뮬레이터 검증이 필요하긴하다.
+
+---
+
+시뮬레이터 안보이는데?
+
+---
+
+시뮬레이터만 뜨고 fr55 안보이는데?
+
+---
+
+이상하다 아까 fr165 잘 띄웠는데 지금은 fr55 안뜬다. 시뮬레이터는 잘떠있다. 더 검토해라
+
+---
+
+그런데 왜 아까 fr165는 잘됬어요...fr55 띄워보세요 이건 앞으로도 중요해요. 시뮬레이터 종료할까요?
+
+---
+
+vs code 가민 확장은 못찾겠는데? 어디있냐?
+
+---
+
+run test 는 있는데 에러나고 run app 은 없다.
+
+---
+
+다시 당신이 직접 시뮬레이터 띄워봐라 윈도우즈 재부팅했다.
+
+---
+
+그냥 빈 시뮬레이터 인데?
+
+---
+
+이전에 fr165 는 띄웟는데? fr165 다시 띄워봐라
+
+---
+
+아니다.당신이 시뮬레이터 띄우고 디바이스 연결하고 다했다. 다시해봐라.
+
+---
+
+/codex:rescue 지금 가민 시뮬레이터와 fr55 가 연결이 안된다. 해결하라.
+
+---
+
+/codex:rescue 지금 가민 시뮬레이터와 fr55 디바이스 이미지 가 연결이 안된다. 해결하라.
+
+---
+
+실행해봐라.
+
+---
+
+vs code 확장으로 보여다오
+
+---
+
+그럼 wsl 에서 linux 용 connectiq sdk 설치하면 다 해결되나?
+
+---
+
+네, linux sdk 셋업해주세요. 사전에 이렇게 하면 문제없는지 인터넷에서 조사해보고 문제없으면 진행하세요.
+
+---
+
+이를 어떻하지? 시뮬레이터를 써야하는데 왜 아까는 되고 지금은 안되지? 재부팅해도 안되고....원인이 뭐야? ultrathink
+
+---
+
+멕에서도 가민 시뮬레이터를 못띄우나?
+
+---
+
+맥은 잘되네...그럼 여기있는 UI 작업을 맥으로 옮길까? 어떻게 세션에게 전달하면 될까?
+
+---
+
+네, 1,2,3 전부 진행해주세요.
+
+---
+
+이제 pull 해서 실기기에서 확인해보죠
+
+---
+
+네 커밋해두세요.
+
+---
+
+fr165 에서 이전보다 폰트가 작아졌구나. 더 크도 되는데.. 동작은 잘한다.
+
+---
+
+달라진게 뭐지? 잘 모르겠는데? 그리고 다른 기기들도 이런 문제가 있지않을까?
+
+---
+
+맥이 처리할께요 커밋안된변경사항 폐기하세요
+
+---
+
+라벨도 똑같은 크기인데? 한단계 작은 반응형이 아닌데?
+
+---
+
+이제 풀해서 실기기에 테스트하자
+
+---
+
+좋다..
+
+---
+
+다시 풀하자. 수정한게 잇다.
+
+---
+
+나는 runvision.prg 가 아닌 runvision-fr55.prg 를 사용했다. 어떤걸 사용해야하나?
+
+---
+
+그냥 runvision.prg 를 165,55 둘다 사용하면 안되나?
+
+---
+
+기존의 prg 파일은 다 없애고 b로 가자
+
+---
+
+---
+Error: 'Signature check failed on file: RunVisionIQ'
+Time: 2026-01-20T22:10:31Z
+Part-Number: 006-B4033-00
+Firmware-Version: '11.03'
+Language-Code: kor
+---
+Error: 'Signature check failed on file: RunVisionIQ'
+Time: 2026-01-20T22:15:45Z
+Part-Number: 006-B4033-00
+Firmware-Version: '11.03'
+Language-Code: kor
+---
+Error: Out Of Memory Error
+Details: 'Failed invoking <symbol>'
+Time: 2026-05-24T23:37:31Z
+Part-Number: 006-B4033-00
+Firmware-Version: '11.03'
+Language-Code: kor
+ConnectIQ-Version: 5.2.0
+Filename: G4322441
+Appname: 'RunVision IQ - 런비전'
+Stack: 
+  - pc: 0x10002103
+    File: '\\wsl.localhost\Ubuntu-24.04\home\jhkim\00.Projects\00.RunVision\runvision-iq\source\RunVisionIQView.mc'
+    Line: 668
+    Function: compute
+---
+Error: Out Of Memory Error
+Details: 'Failed invoking <symbol>'
+Time: 2026-05-24T23:50:55Z
+Part-Number: 006-B4033-00
+Firmware-Version: '11.03'
+Language-Code: kor
+ConnectIQ-Version: 5.2.0
+Filename: G4322441
+Appname: 'RunVision IQ - 런비전'
+Stack: 
+  - pc: 0x1000227f
+    File: '\\wsl.localhost\Ubuntu-24.04\home\jhkim\00.Projects\00.RunVision\runvision-iq\source\RunVisionIQView.mc'
+    Line: 929
+    Function: <globals/RunVisionIQView/<>tryGetServiceCharacteristic>
+  - pc: 0x1000185a
+    File: '\\wsl.localhost\Ubuntu-24.04\home\jhkim\00.Projects\00.RunVision\runvision-iq\source\RunVisionIQView.mc'
+    Line: 440
+    Function: compute
+
+---
+
+새로운 로그이다. ---
+Error: Out Of Memory Error
+Details: 'Failed invoking <symbol>'
+Time: 2026-05-25T00:01:24Z
+Part-Number: 006-B4033-00
+Firmware-Version: '11.03'
+Language-Code: kor
+ConnectIQ-Version: 5.2.0
+Filename: G4322441
+Appname: 'RunVision IQ - 런비전'
+Stack: 
+  - pc: 0x1000227f
+    File: '\\wsl.localhost\Ubuntu-24.04\home\jhkim\00.Projects\00.RunVision\runvision-iq\source\RunVisionIQView.mc'
+    Line: 929
+    Function: <globals/RunVisionIQView/<>tryGetServiceCharacteristic>
+  - pc: 0x1000185a
+    File: '\\wsl.localhost\Ubuntu-24.04\home\jhkim\00.Projects\00.RunVision\runvision-iq\source\RunVisionIQView.mc'
+    Line: 440
+    Function: comput
+
+---
+
+크래쉬는 안되는데 기기의 케이던스, 심박수가 전부 0으로 나온다. 워치는 정확한 수치가 나온다. 왜이러지? 이게 더 불안하다. 데이터 전송은 fr165 등 공통기능인데..왜 이러나?
+
+---
+
+중요한것은 한달전에는 잘 동작했다는거다. 지금 ble protocol 상의 문제는 아니다. 달라진것은 5초마다 전송하는 것이다. 여기서 데이터를 못채울수도 있나? 심박수, 케이던스가 데이터 우선순위에서 뒷편에 위치하나?
+
+---
+
+차고 있었으니 워치에는 정확한 수치가 떴겠죠. 지금 와치와 기기의 값을 비교하면서 테스트하는겁니다.
+
+---
+
+와치에서 숫자로 보임
+
+---
+
+이제 다 잘된다. 정리해서 맥에게 검토시키겠다.
