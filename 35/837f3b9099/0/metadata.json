@@ -1,0 +1,190 @@
+{
+  "cli_version": "dev",
+  "checkpoint_id": "35837f3b9099",
+  "session_id": "567062c2-d6ea-4f97-8e3b-a1cc8e5292ac",
+  "strategy": "manual-commit",
+  "created_at": "2026-05-25T09:49:33.673764006Z",
+  "branch": "main",
+  "checkpoints_count": 21,
+  "files_touched": [
+    "Docs/HANDOFF-garmin-watch-ui.md",
+    "source/RunVisionIQView.mc",
+    "source/RunningStrategy.mc",
+    "source/Tests.mc"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-4-7",
+  "turn_id": "ab56f4eb7930",
+  "token_usage": {
+    "input_tokens": 112805,
+    "cache_creation_tokens": 8758140,
+    "cache_read_tokens": 241163037,
+    "output_tokens": 1152148,
+    "api_call_count": 567
+  },
+  "session_metrics": {
+    "turn_count": 103
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-05-25T09:49:33.528131829Z",
+    "agent_lines": 0,
+    "agent_removed": 10,
+    "human_added": 39,
+    "human_modified": 34,
+    "human_removed": 0,
+    "total_committed": 45,
+    "total_lines_changed": 83,
+    "agent_percentage": 12.048192771084338,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 33,
+      "agent_lines_removed": 103
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 33,
+      "agent_lines_removed": 103
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 22,
+      "agent_lines_removed": 103
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 27,
+      "agent_lines_removed": 109
+    },
+    {
+      "checkpoint_number": 7,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 27,
+      "agent_lines_removed": 109
+    },
+    {
+      "checkpoint_number": 8,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 20,
+      "agent_lines_removed": 103
+    },
+    {
+      "checkpoint_number": 9,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 20,
+      "agent_lines_removed": 103
+    },
+    {
+      "checkpoint_number": 10,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 37,
+      "agent_lines_removed": 107
+    },
+    {
+      "checkpoint_number": 11,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 37,
+      "agent_lines_removed": 107
+    },
+    {
+      "checkpoint_number": 12,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 23,
+      "agent_lines_removed": 107
+    },
+    {
+      "checkpoint_number": 13,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 23,
+      "agent_lines_removed": 107
+    },
+    {
+      "checkpoint_number": 14,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 15,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 23,
+      "agent_lines_removed": 110
+    },
+    {
+      "checkpoint_number": 16,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 29,
+      "agent_lines_removed": 122
+    },
+    {
+      "checkpoint_number": 17,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 18,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 29,
+      "agent_lines_removed": 103
+    },
+    {
+      "checkpoint_number": 19,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 29,
+      "agent_lines_removed": 103
+    },
+    {
+      "checkpoint_number": 20,
+      "user_lines_added": 8,
+      "user_lines_removed": 5,
+      "agent_lines_added": 29,
+      "agent_lines_removed": 103,
+      "user_added_per_file": {
+        "Docs/HANDOFF-garmin-watch-ui.md": 5,
+        "source/Tests.mc": 3
+      },
+      "user_removed_per_file": {
+        "Docs/HANDOFF-garmin-watch-ui.md": 3,
+        "source/Tests.mc": 2
+      }
+    },
+    {
+      "checkpoint_number": 21,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 34,
+      "agent_lines_removed": 105
+    }
+  ]
+}
