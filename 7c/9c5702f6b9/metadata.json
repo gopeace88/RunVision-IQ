@@ -1,0 +1,25 @@
+{
+  "cli_version": "dev",
+  "checkpoint_id": "7c9c5702f6b9",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "source/RunningStrategy.mc"
+  ],
+  "sessions": [
+    {
+      "metadata": "/7c/9c5702f6b9/0/metadata.json",
+      "transcript": "/7c/9c5702f6b9/0/full.jsonl",
+      "content_hash": "/7c/9c5702f6b9/0/content_hash.txt",
+      "prompt": "/7c/9c5702f6b9/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 102516,
+    "cache_creation_tokens": 8011055,
+    "cache_read_tokens": 198839747,
+    "output_tokens": 940366,
+    "api_call_count": 470
+  }
+}
