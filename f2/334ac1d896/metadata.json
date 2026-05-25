@@ -1,0 +1,25 @@
+{
+  "cli_version": "dev",
+  "checkpoint_id": "f2334ac1d896",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Docs/HANDOFF-garmin-watch-ui.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/f2/334ac1d896/0/metadata.json",
+      "transcript": "/f2/334ac1d896/0/full.jsonl",
+      "content_hash": "/f2/334ac1d896/0/content_hash.txt",
+      "prompt": "/f2/334ac1d896/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 102516,
+    "cache_creation_tokens": 8011055,
+    "cache_read_tokens": 198839747,
+    "output_tokens": 940366,
+    "api_call_count": 470
+  }
+}
