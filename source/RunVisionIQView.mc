@@ -763,7 +763,14 @@ class RunVisionIQView extends WatchUi.DataField {
         // "같아 보임"). 행을 화면에 넓게 펼쳐 행 간격이 크므로 큰 화면은 값이 LARGE까지 커진다.
         var rowGap = (L[:row1Y] as Lang.Number) - (L[:timeY] as Lang.Number);
         var labelH = dc.getFontHeight(Graphics.FONT_XTINY);
-        var fonts = [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_SMALL];
+        // 세로로 긴 화면(Edge)은 시스템 FONT_LARGE가 작으므로(edge1040 L=36) 큰 데이터필드 숫자 폰트를
+        // 후보에 추가 — 값이 화면 크기에 맞게 커짐. NUMBER 폰트도 대시·콜론·소수점 렌더됨(검증). 그 외
+        // 기기는 기존 [LARGE/MEDIUM/SMALL] 그대로(워치 regression 0).
+        var tallPortrait = (h * 100 / w) > 138;
+        var fonts = tallPortrait
+            ? [Graphics.FONT_NUMBER_HOT, Graphics.FONT_NUMBER_MEDIUM, Graphics.FONT_NUMBER_MILD,
+               Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_SMALL]
+            : [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_SMALL];
         var valueFont = Graphics.FONT_SMALL;   // 폴백: 가장 작은 값 폰트
         for (var i = 0; i < fonts.size(); i++) {
             if (dc.getFontHeight(fonts[i]) + labelH <= rowGap) {
