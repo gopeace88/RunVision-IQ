@@ -1,0 +1,50 @@
+{
+  "cli_version": "dev",
+  "checkpoint_id": "2a3a5eab9113",
+  "session_id": "66cd488f-fef7-4818-93d4-d798b2ff24d6",
+  "strategy": "manual-commit",
+  "created_at": "2026-05-28T17:48:03.988237197Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "Docs/HANDOFF-garmin-watch-ui.md",
+    "source/CyclingStrategy.mc",
+    "source/MetricStrategy.mc",
+    "source/RunVisionIQView.mc",
+    "source/RunningStrategy.mc"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "4ed6135e90bf",
+  "token_usage": {
+    "input_tokens": 21880,
+    "cache_creation_tokens": 538356,
+    "cache_read_tokens": 10937369,
+    "output_tokens": 133283,
+    "api_call_count": 83
+  },
+  "session_metrics": {
+    "turn_count": 8
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-05-28T17:48:03.96831568Z",
+    "agent_lines": 116,
+    "agent_removed": 66,
+    "human_added": 12,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 128,
+    "total_lines_changed": 194,
+    "agent_percentage": 93.81443298969072,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}
