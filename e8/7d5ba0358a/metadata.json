@@ -1,0 +1,26 @@
+{
+  "cli_version": "dev",
+  "checkpoint_id": "e87d5ba0358a",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 7,
+  "files_touched": [
+    "manifest.xml",
+    "scripts/generate_device_list.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/e8/7d5ba0358a/0/metadata.json",
+      "transcript": "/e8/7d5ba0358a/0/full.jsonl",
+      "content_hash": "/e8/7d5ba0358a/0/content_hash.txt",
+      "prompt": "/e8/7d5ba0358a/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 21878,
+    "cache_creation_tokens": 537074,
+    "cache_read_tokens": 10711151,
+    "output_tokens": 131947,
+    "api_call_count": 82
+  }
+}
