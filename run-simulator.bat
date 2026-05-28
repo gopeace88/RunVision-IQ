@@ -4,11 +4,13 @@ title RunVision-IQ Simulator
 REM === Settings ===
 set SDK_PATH=C:\Users\jinhee\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.4.0-2025-12-03-5122605dc\bin
 set JAVA_PATH=C:\Program Files\Java\jdk-11.0.2\bin\java.exe
-set PRG_FILE=D:\00.Projects\00.RunVision\runvision-iq\bin\RunVisionIQ.prg
 set DEVICE=fr265
 
 REM === Override device if parameter provided ===
 if not "%~1"=="" set DEVICE=%~1
+
+REM === PRG file is device-suffixed (build.sh outputs bin\RunVisionIQ-<device>.prg) ===
+set PRG_FILE=D:\00.Projects\00.RunVision\runvision-iq\bin\RunVisionIQ-%DEVICE%.prg
 
 echo.
 echo === RunVision-IQ Simulator ===

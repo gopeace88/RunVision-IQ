@@ -3,8 +3,8 @@
 # 버전은 manifest.xml(iq:application version)에서만 변경하면 됨 → 화면 표시·.iq 파일명 모두 자동 반영.
 #
 # 사용:
-#   ./build.sh            → 단일 기기 .prg (기본 fr165) = bin/RunVisionIQ.prg   (사이드로드/시뮬용)
-#   ./build.sh fr265      → 지정 기기 .prg
+#   ./build.sh            → 단일 기기 .prg (기본 fr165) = bin/RunVisionIQ-fr165.prg  (사이드로드/시뮬용)
+#   ./build.sh fr55       → 지정 기기 .prg = bin/RunVisionIQ-<기기>.prg  (기기별 파일 공존 → 타겟 혼동 방지)
 #   ./build.sh iq         → 전체 기기 릴리즈 .iq = bin/RunVisionIQ-<ver>.iq      (스토어 업로드용)
 #
 # WSL 네이티브 경로 + Windows monkeyc → powershell.exe(UNC 인지) 경유. cmd.exe 는 UNC cwd 불가.
@@ -41,8 +41,8 @@ if [ "${1:-}" = "iq" ]; then
     powershell.exe -NoProfile -Command "& '$SDK' -e -r -o '$OUT' -f '$JUNGLE' -y '$KEY'"
 else
     DEV="${1:-fr165}"
-    OUT="$W\\bin\\RunVisionIQ.prg"
-    echo "[build] 테스트 .prg ($DEV): bin/RunVisionIQ.prg"
+    OUT="$W\\bin\\RunVisionIQ-$DEV.prg"
+    echo "[build] 테스트 .prg ($DEV): bin/RunVisionIQ-$DEV.prg"
     powershell.exe -NoProfile -Command "& '$SDK' -o '$OUT' -f '$JUNGLE' -y '$KEY' -d $DEV -w"
 fi
 echo "[build] 완료."
