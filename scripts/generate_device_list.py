@@ -77,7 +77,7 @@ DEVICE_DISPLAY = {
     # Fenix 7
     "fenix7":           "7",
     "fenix7s":          "7S",
-    "fenix7x":          "7X",
+    "fenix7x":          "7X / Enduro 2",
     "fenix7pro":        "7 Pro",
     "fenix7spro":       "7S Pro",
     "fenix7xpro":       "7X Pro",
@@ -99,9 +99,8 @@ DEVICE_DISPLAY = {
     "epix2pro47mm": "2 Pro (47mm)",
     "epix2pro51mm": "2 Pro (51mm)",
 
-    # Enduro
+    # Enduro (Enduro 2 = fenix7x device id — 별도 enduro2 id 없음, 추가 금지)
     "enduro":  "1",
-    "enduro2": "2",
     "enduro3": "3",
 
     # Venu (Gen1/venusqm 제외: DataField 미지원 또는 ActiveLook 미포함 구형)
@@ -159,6 +158,19 @@ DEVICE_DISPLAY = {
 
     # Venu X1 (직사각형 디스플레이)
     "venux1": "X1",
+
+    # Edge (사이클 컴퓨터 — DataField + BLE Central 지원, 사이클 모드. 1.2.0 시뮬레이터 검증)
+    "edge530":      "530",
+    "edge540":      "540 / 540 Solar",
+    "edge830":      "830",
+    "edge840":      "840 / 840 Solar",
+    "edge850":      "850",
+    "edge1030":     "1030",
+    "edge1030plus": "1030 Plus",
+    "edge1040":     "1040 / 1040 Solar",
+    "edge1050":     "1050",
+    "edgeexplore2": "Explore 2",
+    "edgemtb":      "MTB",
 }
 
 # ─── 시리즈 그룹 정의 (표시 순서) ───────────────────────────────────────────────
@@ -184,7 +196,7 @@ SERIES_GROUPS = [
         "fenix8pro47mm", "fenix8pro51mm", "fenixe",
     ]),
     ("epix™",        ["epix2", "epix2pro42mm", "epix2pro47mm", "epix2pro51mm"]),
-    ("Enduro™",      ["enduro", "enduro2", "enduro3"]),
+    ("Enduro™",      ["enduro", "enduro3"]),
     ("Venu®",        [
         "venu2", "venu2s", "venu2plus",
         "venu3", "venu3s", "venusq2m",
@@ -207,6 +219,11 @@ SERIES_GROUPS = [
     ("Descent™",     ["descentmk2", "descentmk2s", "descentmk343mm", "descentmk351mm"]),
     ("D2™",          ["d2airx10", "d2mach1"]),
     ("Approach®",    ["approachs7042mm", "approachs7047mm"]),
+    ("Edge®",        [
+        "edge530", "edge540", "edge830", "edge840", "edge850",
+        "edge1030", "edge1030plus", "edge1040", "edge1050",
+        "edgeexplore2", "edgemtb",
+    ]),
 ]
 
 # ─── manifest.xml 파싱 ──────────────────────────────────────────────────────────

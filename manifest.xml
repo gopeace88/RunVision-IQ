@@ -153,7 +153,7 @@
             <iq:product id="instinct3amoled45mm"/>
             <iq:product id="instinct3amoled50mm"/>
             <iq:product id="instinct3solar45mm"/>
-            <!-- <iq:product id="instinct3solar50mm"/> SDK 8.4.0에 없음 (향후 추가 예정) -->
+            <!-- <iq:product id="instinct3solar50mm"/> 실존 device id이나 SDK 8.4.0·Garmin Store 모두 'invalid'로 거부 (Garmin 버그 CIQQA-3813). 빌드 통과 확인되면 활성화 -->
             <iq:product id="instinctcrossover"/>
             <iq:product id="instinctcrossoveramoled"/>
             <iq:product id="instincte40mm"/>
