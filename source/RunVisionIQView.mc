@@ -605,7 +605,7 @@ class RunVisionIQView extends WatchUi.DataField {
                 _metricValues.altitudeValid = (altitude != null);
                 _metricValues.totalAscentValid = (info != null && info has :totalAscent && info.totalAscent != null);
 
-                // 이번 tick 에 보낼 패킷을 전략이 결정 (러닝: 1개/tick 회전 / 사이클: 시간 매tick + 나머지 2개씩).
+                // 이번 tick 에 보낼 패킷을 전략이 결정 (러닝·사이클 모두 1개/tick 균등 회전 — buildTickPackets 기본).
                 var packets = (_strategy as MetricStrategy).buildTickPackets(_metricValues, _computeCount);
                 if (packets.size() > 0) {
                     _writeQueue = packets;

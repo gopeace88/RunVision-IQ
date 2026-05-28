@@ -20,8 +20,9 @@ class MetricStrategy {
     }
 
     //! 페이싱 전송: 이번 tick(=compute 횟수) 에 글래스로 보낼 패킷들을 반환.
-    //! 기본(러닝): 유효 메트릭을 1개/tick 균등 회전 → 각 메트릭 ~5초(전체 메트릭 수만큼). burst 없음.
-    //! 사이클 등 빠른 모드는 오버라이드(시간 매 tick + 나머지 분할 등)로 갱신 주기를 높인다.
+    //! 유효 메트릭을 1개/tick 균등 회전 → 각 메트릭 ~(유효 메트릭 수)초. burst 없음.
+    //! 현재 러닝·사이클 모두 이 기본 구현을 그대로 사용(어느 서브클래스도 override 안 함).
+    //! 더 빠른 갱신이 필요하면 서브클래스가 override 가능(설계 여지로 남김).
     function buildTickPackets(values as MetricValues, tickIndex as Lang.Number) as Lang.Array<Lang.ByteArray> {
         var packets = buildPackets(values);
         var n = packets.size();

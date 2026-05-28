@@ -456,6 +456,8 @@ function testDetectStrategy_NullSport_ReturnsRunning(logger as Logger) as Boolea
 }
 
 // === Transmit interval tests ===
+// 참고: getTransmitIntervalSeconds 는 페이싱(1패킷/tick) 도입(a914985) 후 전송 게이트에 안 쓰임(advisory).
+//       아래 값은 "한 바퀴 갱신 목표 주기" 문서화 의도를 핀하는 용도로 유지.
 
 (:test)
 function testRunningStrategy_TransmitInterval_Is5(logger as Logger) as Boolean {
@@ -467,6 +469,69 @@ function testRunningStrategy_TransmitInterval_Is5(logger as Logger) as Boolean {
 function testCyclingStrategy_TransmitInterval_Is2(logger as Logger) as Boolean {
     var strategy = new CyclingStrategy();
     return strategy.getTransmitIntervalSeconds() == 2;
+}
+
+// === Pacing (buildTickPackets / onComputeTick) tests ===
+// a914985 페이싱 재작성: burst→1패킷/tick 균등 회전 + onComputeTick 로 HR락을 전송자격과 분리.
+
+(:test)
+function testBuildTickPackets_RotatesOneValidMetricPerTick(logger as Logger) as Boolean {
+    var values = new MetricValues();
+    values.setAllValid();
+    values.elapsedSeconds = 100;
+    values.paceSeconds = 300;
+    values.hr = 150;
+    values.cadence = 170;
+    values.distance = 1000;
+    var strategy = new RunningStrategy();  // 무상태 → 반복 호출 안전
+    var full = strategy.buildPackets(values);
+    var n = full.size();
+    if (n == 0) {
+        logger.debug("buildPackets returned empty");
+        return false;
+    }
+    // 매 tick 정확히 1패킷, full 의 i%n 슬롯을 순서대로 회전(래핑 포함).
+    for (var i = 0; i < n * 2 + 1; i++) {
+        var tick = strategy.buildTickPackets(values, i);
+        if (tick.size() != 1) {
+            logger.debug("tick " + i + " size=" + tick.size() + " (expected 1)");
+            return false;
+        }
+        if (tick[0][0] != full[i % n][0]) {
+            logger.debug("tick " + i + " slot=" + tick[0][0] + " expected=" + full[i % n][0]);
+            return false;
+        }
+    }
+    return true;
+}
+
+(:test)
+function testBuildTickPackets_EmptyWhenNoValidMetrics(logger as Logger) as Boolean {
+    // base MetricStrategy.buildPackets 는 빈 배열 → n==0 가드로 빈 tick.
+    var strategy = new MetricStrategy();
+    var values = new MetricValues();
+    var tick = strategy.buildTickPackets(values, 0);
+    return tick.size() == 0;
+}
+
+(:test)
+function testOnComputeTick_DrivesHrLock_WithoutBuildPackets(logger as Logger) as Boolean {
+    // 핵심: onComputeTick 만으로(전송=buildPackets 호출 없이) HR 30초 락이 진행돼야 함.
+    // HR 없이 30초 경과 → ascent 모드 락. 이후 HR 이 들어와도 ascent 유지.
+    var strategy = new CyclingStrategy();
+    for (var t = 0; t <= 30; t++) {
+        strategy.onComputeTick(0, t);  // hr=0, buildPackets 안 부름
+    }
+    var values = new MetricValues();
+    values.setAllValid();
+    values.elapsedSeconds = 40;
+    values.hr = 150;          // HR 이제 유효
+    values.totalAscent = 700;
+    var packets = strategy.buildPackets(values);  // 첫 buildPackets
+    // onComputeTick 가 락을 ascent 로 구동 → 0x0B = totalAscent(700), hr(150) 아님.
+    // (onComputeTick 가 no-op 이라면 첫 buildPackets 가 hr=150 을 봐 HR 모드로 락 → 150 이 됐을 것.)
+    var expected = [0x0B, 0xBC, 0x02, 0x00, 0x00]b;  // 700 = 0x2BC
+    return findAndCompare(packets, 0x0B, expected, logger);
 }
 
 // === Packet-level skip tests (결함 A 수정: stale 0 패킷을 iLens 로 안 보냄) ===
