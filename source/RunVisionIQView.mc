@@ -60,10 +60,10 @@ class RunVisionIQView extends WatchUi.DataField {
     private var _userWeight as Lang.Float = 70.0;          // 사용자 체중 (kg, 기본값 70kg)
     private var _weightInitialized as Lang.Boolean = false;  // 체중 초기화 플래그
 
-    // Write Queue: 전송 주기마다 모든 메트릭을 순차 전송
+    // Write Queue: 이번 tick 에 보낼 패킷(들). 페이싱으로 보통 1~3개. 콜백 기반 순차 전송.
     private var _writeQueue as Lang.Array<Lang.ByteArray> = [] as Lang.Array<Lang.ByteArray>;
     private var _isWriting as Lang.Boolean = false;  // Write 진행 중 플래그
-    private var _computeCount as Lang.Number = 0;    // compute() 호출 횟수 (전송 주기 제어)
+    private var _computeCount as Lang.Number = 0;    // compute() 호출 횟수 (페이싱 라운드로빈 인덱스)
 
     // BLE Write 속도 자동 감지
     // - 빠른 기기 (FR165+): WRITE_WITH_RESPONSE (~80ms) → 5개/초 OK
@@ -215,6 +215,14 @@ class RunVisionIQView extends WatchUi.DataField {
         _altitudeLabel = "---";
         _devicesFound = 0;
         _elapsedSeconds = 0;  // ✅ 경과 시간 초기화
+        // 세션 경계: 전략(사이클 HR 30초 락 등 누적 상태)·회전 인덱스를 폐기해 다음 세션이
+        // 이전 라이드 결정을 상속하지 않도록. _strategy=null → 다음 compute 의 실시간 판정이 새로 생성.
+        _strategy = null;
+        _computeCount = 0;
+        // 진행 중이던 write/큐 폐기 → 리셋 중 in-flight 콜백이 이전 세션 패킷을 새 세션에 흘리지 않게.
+        // (disconnect 경로와 동일 처리. 페이싱이라 큐는 보통 ≤1.)
+        _writeQueue = [] as Lang.Array<Lang.ByteArray>;
+        _isWriting = false;
     }
 
     //! Called each second to compute and display values (DataField)
@@ -544,50 +552,63 @@ class RunVisionIQView extends WatchUi.DataField {
         // 주기마다 모든 메트릭을 queue에 추가 → 순차 전송
         // iLens는 write 완료 콜백 기반으로 다음 패킷을 이어 보낸다.
         _computeCount++;
+        // 전송 전략을 매 compute 실시간 sport 로 재판정(drawMetricGrid 화면 판정과 동일 기준).
+        // 과거: 첫 compute 1회만 검출해 영구 고정 → 첫 프레임에 sport 미확정(느린 fr55 에서 흔함)이면
+        //       러닝으로 잠겨, 사이클인데도 0x07=페이스·0x0e=cadence(자전거 센서 없음→0) 를 보냄
+        //       → 글래스에 페이스가 뜨고 고도=0. (fr165 는 레이스를 이겨 가려졌던 기존 버그.)
+        // sport 클래스가 바뀔 때만 인스턴스 교체 → CyclingStrategy HR-lock 등 상태 보존.
+        // profile==null(전이적) 이면 현재 전략 유지(thrash 방지).
+        var profile = Activity.getProfileInfo();
+        if (profile != null) {
+            if (profile.sport == Activity.SPORT_CYCLING) {
+                if (_strategy == null || !(_strategy instanceof CyclingStrategy)) {
+                    _strategy = new CyclingStrategy();
+                }
+            } else {
+                if (_strategy == null || !(_strategy instanceof RunningStrategy)) {
+                    _strategy = new RunningStrategy();
+                }
+            }
+        }
         if (_strategy == null) {
-            _strategy = detectStrategy(info);
+            _strategy = new RunningStrategy();  // 최초 프레임 profile==null 안전장치
         }
 
-        var transmitInterval = (_strategy != null) ? (_strategy as MetricStrategy).getTransmitIntervalSeconds() : 5;
-        if (isSlowBleAllowlistDevice()) {
-            transmitInterval = 1;
-        }
-        if (_isConnected && _exerciseCharacteristic != null && _computeCount % transmitInterval == 0) {
+        // 전략의 세션 상태(사이클 HR 30초 락 등)는 BLE 전송 자격(_isWriting)과 무관하게 매 compute 갱신.
+        // (전송이 skip 되는 tick 에도 HR 관측이 누락되지 않도록 — 스펙 §2 "매 compute".)
+        (_strategy as MetricStrategy).onComputeTick((hr != null) ? hr : 0, _elapsedSeconds);
+
+        // 페이싱 전송: 매 compute(1Hz)마다 메트릭 1개씩 균등 라운드로빈으로 전송.
+        // burst(5패킷 동시)는 느린 기기(FR55)에서 HR/cad 가 글래스에 15~20초 간격으로만 도달 → freeze.
+        // 1패킷/tick → 평균 1 write/초(= 기존 5초모드 배터리), burst 과부하 없음, 기기 판별 불필요.
+        // 각 메트릭은 (유효 메트릭 수)초마다 갱신(전부 유효 시 ~5초). buildPackets 가 유효 메트릭만
+        // 순서대로 주므로 그 중 _computeCount 로 회전 → invalid 슬롯에 빈 tick 낭비 없음.
+        // _isWriting 가드 유지 → 큐 ≤ 1 (무가드 write·큐 무한증가·OOM 없음).
+        if (_isConnected && _exerciseCharacteristic != null && !_isWriting) {
             try {
-                // 1. Write 진행 중이 아닐 때만 queue 초기화
-                if (!_isWriting) {
-                    _writeQueue = [] as Lang.Array<Lang.ByteArray>;
+                // MetricValues 채우기 (compute() 내에서 이미 계산된 값들 복사)
+                _metricValues.elapsedSeconds = _elapsedSeconds;
+                _metricValues.paceSeconds = paceSeconds;
+                _metricValues.speedKmh = speedKmh;
+                _metricValues.hr = (hr != null) ? hr : 0;
+                _metricValues.cadence = cadence;
+                // Float → Int 변환은 encodeUINT32() 와 동일하게 반올림 (truncate 시 ~0.5m 편차 발생)
+                _metricValues.distance = (distance != null) ? roundFloat(distance) : 0;
+                _metricValues.altitudeM = (altitude != null) ? roundFloat(altitude) : 0;
+                _metricValues.totalAscent = (info != null && info has :totalAscent && info.totalAscent != null) ? roundFloat(info.totalAscent) : 0;
 
-                    // MetricValues 채우기 (compute() 내에서 이미 계산된 값들 복사)
-                    _metricValues.elapsedSeconds = _elapsedSeconds;
-                    _metricValues.paceSeconds = paceSeconds;
-                    _metricValues.speedKmh = speedKmh;
-                    _metricValues.hr = (hr != null) ? hr : 0;
-                    _metricValues.cadence = cadence;
-                    // Float → Int 변환은 encodeUINT32() 와 동일하게 반올림 (truncate 시 ~0.5m 편차 발생)
-                    _metricValues.distance = (distance != null) ? roundFloat(distance) : 0;
-                    _metricValues.altitudeM = (altitude != null) ? roundFloat(altitude) : 0;
-                    _metricValues.totalAscent = (info != null && info has :totalAscent && info.totalAscent != null) ? roundFloat(info.totalAscent) : 0;
+                // *Valid 플래그: stale 0 패킷을 iLens 로 보내지 않기 위한 packet-level skip 신호.
+                _metricValues.speedValid = speedValid;
+                _metricValues.hrValid = hrValid;
+                _metricValues.cadenceValid = cadenceValid;
+                _metricValues.distanceValid = distanceValid;
+                _metricValues.altitudeValid = (altitude != null);
+                _metricValues.totalAscentValid = (info != null && info has :totalAscent && info.totalAscent != null);
 
-                    // *Valid 플래그: stale 0 패킷을 iLens 로 보내지 않기 위한 packet-level skip 신호.
-                    // Strategy.buildPackets() 가 false 인 메트릭의 패킷을 생성 안 함 → iLens 직전값 유지.
-                    _metricValues.speedValid = speedValid;
-                    _metricValues.hrValid = hrValid;
-                    _metricValues.cadenceValid = cadenceValid;
-                    _metricValues.distanceValid = distanceValid;
-                    _metricValues.altitudeValid = (altitude != null);
-                    _metricValues.totalAscentValid = (info != null && info has :totalAscent && info.totalAscent != null);
-
-                    // Strategy 가 5개 패킷 생성 (러닝 / 사이클 분기)
-                    var packets = _strategy.buildPackets(_metricValues);
-                    for (var i = 0; i < packets.size(); i++) {
-                        _writeQueue.add(packets[i]);
-                    }
-
-                    // DFLogger.log("[TX] pace=" + paceSeconds + " hr=" + hr + " cad=" + cadence + " pwr=" + power);
-
-                    // 화면에 핵심 메트릭만 표시
-
+                // 이번 tick 에 보낼 패킷을 전략이 결정 (러닝: 1개/tick 회전 / 사이클: 시간 매tick + 나머지 2개씩).
+                var packets = (_strategy as MetricStrategy).buildTickPackets(_metricValues, _computeCount);
+                if (packets.size() > 0) {
+                    _writeQueue = packets;
                     processWriteQueue();
                 }
             } catch (ex) {
@@ -892,27 +913,6 @@ class RunVisionIQView extends WatchUi.DataField {
         } catch (ex) {
             _isWriting = false;
         }
-    }
-
-    //! 실기기/저사양군 allowlist.
-    //! 이 기기들은 러닝/사이클 모두 1초를 사용한다.
-    private function isSlowBleAllowlistDevice() as Lang.Boolean {
-        var settings = System.getDeviceSettings();
-        if (!(settings has :partNumber) || settings.partNumber == null) {
-            return false;
-        }
-        var partNumber = settings.partNumber as Lang.String;
-        return
-            partNumber.equals("006-B3282-00") ||  // fr45
-            partNumber.equals("006-B3469-00") ||  // fr45
-            partNumber.equals("006-B3847-00") ||  // fr45
-            partNumber.equals("006-B3405-00") ||  // garminswim2
-            partNumber.equals("006-B3639-00") ||  // garminswim2
-            partNumber.equals("006-B3889-00") ||  // instinct2s
-            partNumber.equals("006-B4091-00") ||  // instinct2s
-            partNumber.equals("006-B3869-00") ||  // fr55
-            partNumber.equals("006-B4033-00") ||  // fr55
-            partNumber.equals("006-B4838-00");    // fr55
     }
 
     //! Called when descriptor read completes

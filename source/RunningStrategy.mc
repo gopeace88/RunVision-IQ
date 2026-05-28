@@ -10,7 +10,8 @@ class RunningStrategy extends MetricStrategy {
         MetricStrategy.initialize();
     }
 
-    //! 기본 러닝 전송 주기. 일부 저속 allowlist 기기는 View 레벨에서 2초로 override 한다.
+    //! 러닝 한 바퀴(전체 메트릭) 갱신 목표 주기(초). 페이싱 도입 후 전송 자체엔 직접 안 쓰이나
+    //! (주기는 buildTickPackets 의 1개/tick 회전에 내재화됨) 의도 문서화용으로 유지.
     function getTransmitIntervalSeconds() as Lang.Number {
         return 5;
     }

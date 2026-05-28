@@ -18,6 +18,21 @@ class MetricStrategy {
         // Subclasses override. Default returns empty array.
         return [] as Lang.Array<Lang.ByteArray>;
     }
+
+    //! 페이싱 전송: 이번 tick(=compute 횟수) 에 글래스로 보낼 패킷들을 반환.
+    //! 기본(러닝): 유효 메트릭을 1개/tick 균등 회전 → 각 메트릭 ~5초(전체 메트릭 수만큼). burst 없음.
+    //! 사이클 등 빠른 모드는 오버라이드(시간 매 tick + 나머지 분할 등)로 갱신 주기를 높인다.
+    function buildTickPackets(values as MetricValues, tickIndex as Lang.Number) as Lang.Array<Lang.ByteArray> {
+        var packets = buildPackets(values);
+        var n = packets.size();
+        if (n == 0) { return packets; }
+        return [packets[tickIndex % n]] as Lang.Array<Lang.ByteArray>;
+    }
+
+    //! 매 compute(1Hz) 호출 — BLE 전송 자격(_isWriting)과 무관하게 전략의 세션 상태를 갱신.
+    //! 기본 no-op. CyclingStrategy 가 HR 30초 락 갱신에 사용(스펙 §2: "매 compute hr 관측").
+    function onComputeTick(hr as Lang.Number, elapsedSeconds as Lang.Number) as Void {
+    }
 }
 
 //! Per-compute metric values container.
