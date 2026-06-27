@@ -11,7 +11,7 @@
         minApiLevel="3.1.0"
         name="@Strings.AppName"
         type="datafield"
-        version="1.2.1">
+        version="1.2.0">
 
         <iq:products>
             <!-- ========================================================= -->
@@ -134,7 +134,7 @@
             <iq:product id="venu2plus"/>
             <iq:product id="venu3"/>
             <iq:product id="venu3s"/>
-            <iq:product id="venusq2"/>
+            <!-- venusq2(non-Music): BluetoothLowEnergy API 미지원 → BleDelegate 생성 시 Symbol Not Found 크래시(시뮬 검증 2026-06-01). rLens BLE 통신 불가하므로 제외. venusq2m(Music)만 지원. -->
             <iq:product id="venusq2m"/>
             <!-- Venu 4 Series (2024 신규) -->
             <iq:product id="venu441mm"/>
